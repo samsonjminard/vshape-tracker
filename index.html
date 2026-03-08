@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>V-Shape Program</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #0C0C0F; color: #fff; font-family: 'Barlow', system-ui, sans-serif; }
+  body { max-width: 480px; margin: 0 auto; position: relative; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type=number] { -moz-appearance: textfield; }
+  ::-webkit-scrollbar { width: 0; }
+  button { font-family: 'Barlow', system-ui, sans-serif; cursor: pointer; }
+  textarea { font-family: 'Barlow', system-ui, sans-serif; }
+
+  #bg-glow {
+    position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+    width: 320px; height: 320px; border-radius: 50%;
+    pointer-events: none; z-index: 0; transition: background 0.5s;
+  }
+  #app { position: relative; z-index: 1; padding-bottom: 90px; }
+
+  /* ── MAIN NAV ─────────────────────────────────────────── */
+  #main-nav {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; padding: 20px 20px 0;
+  }
+  .main-nav-btn {
+    border-radius: 14px; padding: 12px 6px; border-width: 1.5px; border-style: solid;
+    font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  /* ── HEADER ───────────────────────────────────────────── */
+  #header { padding: 16px 20px 0; }
+  #header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  #day-label-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 4px; }
+  #day-label { font-size: 30px; font-weight: 900; line-height: 1; letter-spacing: -0.5px; }
+  #day-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+  #today-str { font-size: 11px; color: rgba(255,255,255,0.25); text-transform: capitalize; margin-bottom: 8px; text-align: right; }
+  #btn-clear {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,71,71,0.08); border: 1px solid rgba(255,71,71,0.2);
+    border-radius: 10px; color: rgba(255,110,110,0.7); padding: 8px 12px;
+    font-size: 12px; font-weight: 600;
+  }
+  #btn-clear:hover { background: rgba(255,71,71,0.14); }
+
+  /* ── DAY SELECTOR ─────────────────────────────────────── */
+  #day-selector { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 20px; }
+  .day-btn { border-radius: 12px; padding: 10px 6px; transition: all 0.2s; border-width: 1.5px; border-style: solid; }
+  .day-btn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.3; text-align: center; }
+
+  /* ── PROGRESS BAR ─────────────────────────────────────── */
+  #progress-wrap { margin-bottom: 20px; }
+  #progress-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  #progress-lbl { font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  #progress-val { font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  #progress-track { height: 4px; background: rgba(255,255,255,0.07); border-radius: 100px; overflow: hidden; }
+  #progress-bar { height: 100%; border-radius: 100px; transition: width 0.4s ease; }
+
+  /* ── BLOCKS ───────────────────────────────────────────── */
+  #blocks { padding: 0 20px; }
+  .block-wrap { margin-bottom: 22px; }
+  .block-header { margin-bottom: 8px; }
+  .ss-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 100px; padding: 4px 10px; border-width: 1px; border-style: solid; }
+  .ss-badge-txt { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .block-lbl { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.3); letter-spacing: 1px; text-transform: uppercase; }
+  .block-exercises { border-left-width: 3px; border-left-style: solid; padding-left: 12px; }
+
+  /* ── EXERCISE CARD ────────────────────────────────────── */
+  .ex-card { padding: 16px 16px 12px; border-width: 1px; border-style: solid; margin-bottom: 2px; transition: all 0.3s; }
+  .ex-card:last-child { margin-bottom: 12px; }
+  .ex-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .ex-id-badge { border-radius: 9px; padding: 4px 9px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; border-width: 1.5px; border-style: solid; }
+  .ex-name { font-size: 15px; font-weight: 700; line-height: 1.25; }
+  .ex-meta { font-size: 12px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+  .ex-meta span { font-weight: 600; }
+  .btn-notes { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.4); padding: 6px 8px; font-size: 13px; flex-shrink: 0; }
+  .btn-notes.active { background: rgba(255,255,255,0.1); }
+  .notes-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #fff; font-size: 13px; padding: 10px 12px; margin-bottom: 10px; outline: none; resize: none; line-height: 1.5; display: none; }
+  .col-headers { display: grid; grid-template-columns: 34px 1fr 16px 1fr 48px; gap: 8px; margin-bottom: 2px; align-items: center; }
+  .col-hdr { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.22); text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── SET ROW ──────────────────────────────────────────── */
+  .set-row { display: grid; grid-template-columns: 34px 1fr 16px 1fr 48px; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); transition: opacity 0.25s; }
+  .set-row.done { opacity: 0.42; }
+  .set-num { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; flex-shrink: 0; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+  .set-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.11); border-radius: 10px; color: #fff; font-size: 17px; font-weight: 600; text-align: center; padding: 11px 4px; outline: none; font-family: 'JetBrains Mono', monospace; }
+  .set-input:disabled { opacity: 0.5; cursor: not-allowed; }
+  .set-sep { color: rgba(255,255,255,0.2); font-size: 15px; text-align: center; }
+  .btn-check { width: 48px; height: 44px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-weight: 800; }
+  .btn-check svg { pointer-events: none; }
+  .done-badge { display: none; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; font-weight: 700; }
+
+  /* ── TIMER ────────────────────────────────────────────── */
+  .timer-wrap { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(255,255,255,0.04); border-radius: 14px; margin: 10px 0; border-width: 1px; border-style: solid; }
+  .timer-svg { flex-shrink: 0; transform: rotate(-90deg); }
+  .timer-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 2px; letter-spacing: 1px; }
+  .timer-val { font-size: 16px; font-weight: 700; color: #fff; }
+  .timer-status { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .btn-skip { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #fff; padding: 10px 12px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+
+  /* ── PROGRESO VIEW ────────────────────────────────────── */
+  #progreso-view { padding: 0 20px; display: none; }
+  .prog-day-section { margin-bottom: 32px; }
+  .prog-day-title {
+    font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .prog-day-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .prog-ex-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 16px; margin-bottom: 12px; overflow: hidden;
+  }
+  .prog-ex-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .prog-ex-name { font-size: 14px; font-weight: 700; flex: 1; }
+  .prog-ex-best {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    padding: 4px 8px; border-radius: 8px; border-width: 1px; border-style: solid;
+  }
+  .prog-canvas-wrap { position: relative; width: 100%; }
+  canvas.prog-chart { width: 100%; height: 130px; display: block; }
+  .prog-empty {
+    text-align: center; padding: 28px 0; font-size: 13px; color: rgba(255,255,255,0.25);
+    font-style: italic;
+  }
+  .prog-stats-row { display: flex; gap: 8px; margin-top: 12px; }
+  .prog-stat {
+    flex: 1; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 8px; text-align: center;
+  }
+  .prog-stat-val { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .prog-stat-lbl { font-size: 9px; color: rgba(255,255,255,0.3); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+  .prog-no-data { text-align: center; padding: 60px 20px; }
+  .prog-no-data-icon { font-size: 40px; margin-bottom: 12px; }
+  .prog-no-data-txt { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+  .prog-no-data-sub { font-size: 13px; color: rgba(255,255,255,0.25); }
+
+
+  /* ── ROUTINE TIMER ────────────────────────────────────── */
+  #routine-timer-bar {
+    display: none; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.04); border-radius: 16px;
+    padding: 14px 18px; margin: 14px 20px 0;
+    border-width: 1px; border-style: solid;
+    transition: border-color 0.3s;
+  }
+  #routine-timer-bar.active { display: flex; }
+  #rt-icon { font-size: 20px; flex-shrink: 0; }
+  #rt-center { flex: 1; }
+  #rt-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 2px; }
+  #rt-time { font-size: 28px; font-weight: 900; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+  #rt-status { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+  #btn-rt-toggle {
+    border: none; border-radius: 14px; padding: 12px 18px;
+    font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+
+  /* ── SESSION TIME CHART (in progreso) ─────────────────── */
+  .prog-session-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 16px; margin-bottom: 24px; overflow: hidden;
+  }
+  .prog-session-title {
+    font-size: 13px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  canvas.prog-chart-time { width: 100%; height: 130px; display: block; }
+
+  /* ── BOTTOM BAR ───────────────────────────────────────── */
+  #bottom-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: rgba(12,12,15,0.95); backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 10px 20px 22px;
+    display: flex; justify-content: center; align-items: center;
+  }
+  #bottom-bar-inner { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.25); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div id="bg-glow"></div>
+<div id="app">
+  <!-- MAIN NAV -->
+  <div id="main-nav">
+    <button id="nav-entreno" class="main-nav-btn" onclick="showView('entreno')">🏋️ Entrenamiento</button>
+    <button id="nav-progreso" class="main-nav-btn" onclick="showView('progreso')">📈 Progreso</button>
+  </div>
+
+  <!-- ENTRENAMIENTO VIEW -->
+  <div id="entreno-view">
+    <div id="header">
+      <div id="header-top">
+        <div>
+          <div id="day-label-sub">V-SHAPE PROGRAM</div>
+          <div id="day-label"></div>
+          <div id="day-sub"></div>
+        </div>
+        <div>
+          <div id="today-str"></div>
+          <button id="btn-start-routine" onclick="startRoutine()" style="display:flex;align-items:center;gap:6px;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:6px;">
+            ▶ Iniciar
+          </button>
+          <button id="btn-clear">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+            Borrar sesión
+          </button>
+        </div>
+      </div>
+      <div id="day-selector"></div>
+      <div id="progress-wrap">
+        <div id="progress-top">
+          <span id="progress-lbl">Progreso hoy</span>
+          <span id="progress-val"></span>
+        </div>
+        <div id="progress-track"><div id="progress-bar"></div></div>
+      </div>
+    </div>
+    <div id="routine-timer-bar">
+      <div id="rt-icon">⏱️</div>
+      <div id="rt-center">
+        <div id="rt-label">Duración rutina</div>
+        <div id="rt-time">00:00</div>
+        <div id="rt-status">En curso…</div>
+      </div>
+      <button id="btn-rt-finish" onclick="finishRoutine()">Finalizar</button>
+    </div>
+    <div id="blocks"></div>
+  </div>
+
+  <!-- PROGRESO VIEW -->
+  <div id="progreso-view"></div>
+</div>
+
+<div id="bottom-bar">
+  <div id="bottom-bar-inner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 9a6 6 0 0 0 12 0"/>
+      <line x1="12" y1="15" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
+    </svg>
+    51 años · 89 kg · Objetivo V-Shape
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+const PLAN = {
+  "Torso A": {
+    label: "TORSO A", sub: "Estructura · Lunes", color: "#00E5FF",
+    blocks: [
+      { id: "A", ss: true, rest: 90, exercises: [
+        { id: "A1", name: "Press Inclinado Mancuernas", sets: 3, repsLabel: "10-12" },
+        { id: "A2", name: "Dominadas Pronas", sets: 3, repsLabel: "Fallo" },
+      ]},
+      { id: "B", ss: true, rest: 90, exercises: [
+        { id: "B1", name: "Elevaciones Laterales", sets: 4, repsLabel: "15-20" },
+        { id: "B2", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
+      ]},
+      { id: "C", ss: true, rest: 90, exercises: [
+        { id: "C1", name: "Face Pulls", sets: 3, repsLabel: "15" },
+        { id: "C2", name: "Paseo del Granjero", sets: 3, repsLabel: "45-60s" },
+      ]},
+    ],
+  },
+  "Pierna A": {
+    label: "PIERNA A", sub: "Base · Martes", color: "#FFB300",
+    blocks: [
+      { id: "A", ss: false, rest: 120, exercises: [
+        { id: "A1", name: "Sentadilla Trasera", sets: 4, repsLabel: "8" },
+      ]},
+      { id: "B", ss: true, rest: 90, exercises: [
+        { id: "B1", name: "Peso Muerto Rumano", sets: 3, repsLabel: "10-12" },
+        { id: "B2", name: "Gemelos de Pie", sets: 4, repsLabel: "15" },
+      ]},
+      { id: "C", ss: true, rest: 90, exercises: [
+        { id: "C1", name: "Sentadilla Búlgara", sets: 3, repsLabel: "10" },
+        { id: "C2", name: "Vacío Abdominal", sets: 3, repsLabel: "30s" },
+      ]},
+    ],
+  },
+  "Torso B": {
+    label: "TORSO B", sub: "Vertical · Jueves", color: "#76FF03",
+    blocks: [
+      { id: "A", ss: true, rest: 120, exercises: [
+        { id: "A1", name: "Press Militar Barra", sets: 4, repsLabel: "6-8" },
+        { id: "A2", name: "Chin-ups", sets: 3, repsLabel: "Fallo" },
+      ]},
+      { id: "B", ss: true, rest: 90, exercises: [
+        { id: "B1", name: "Remo Mancuerna 1 Mano", sets: 3, repsLabel: "10-12" },
+        { id: "B2", name: "Flexiones Manos Elevadas", sets: 3, repsLabel: "15" },
+      ]},
+      { id: "C", ss: true, rest: 90, exercises: [
+        { id: "C1", name: "Elevaciones Laterales", sets: 3, repsLabel: "15" },
+        { id: "C2", name: "Extensiones Tríceps", sets: 3, repsLabel: "12" },
+      ]},
+    ],
+  },
+  "Pierna B": {
+    label: "PIERNA B", sub: "Posterior · Viernes", color: "#FF4081",
+    blocks: [
+      { id: "A", ss: false, rest: 120, exercises: [
+        { id: "A1", name: "Peso Muerto Convencional", sets: 3, repsLabel: "5-7" },
+      ]},
+      { id: "B", ss: true, rest: 90, exercises: [
+        { id: "B1", name: "Goblet Squat", sets: 3, repsLabel: "12" },
+        { id: "B2", name: "Face Pulls", sets: 3, repsLabel: "15" },
+      ]},
+      { id: "C", ss: false, rest: 90, exercises: [
+        { id: "C1", name: "Rueda Abdominal", sets: 3, repsLabel: "10" },
+        { id: "C2", name: "Estiramiento Pectoral", sets: 2, repsLabel: "1 min" },
+      ]},
+    ],
+  },
+};
+const DAY_ORDER = ["Torso A", "Pierna A", "Torso B", "Pierna B"];
+const STORAGE_KEY = "vshape_html_v1";
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function hex2rgb(hex, a) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function loadData() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}"); } catch { return {}; } }
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }
+function todayStr() { return new Date().toISOString().split("T")[0]; }
+function dataKey(dayKey, blockId, exId, date) { return `${date||todayStr()}_${dayKey}_${blockId}_${exId}`; }
+function getExData(dayKey, blockId, exId, numSets) {
+  const d = loadData();
+  const k = dataKey(dayKey, blockId, exId);
+  return d[k] || { sets: Array.from({length:numSets},()=>({weight:"",reps:""})), completed: Array(numSets).fill(false), notes: "" };
+}
+function setExData(dayKey, blockId, exId, data) {
+  const d = loadData();
+  d[dataKey(dayKey, blockId, exId)] = data;
+  saveData(d);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESS DATA EXTRACTION
+// ═══════════════════════════════════════════════════════════
+// Returns array of { date, maxWeight, avgWeight, totalVol, sessions } sorted asc
+function getExerciseHistory(dayKey, blockId, exId) {
+  const all = loadData();
+  const prefix = `_${dayKey}_${blockId}_${exId}`;
+  const history = [];
+  Object.entries(all).forEach(([key, val]) => {
+    if (!key.endsWith(prefix)) return;
+    const date = key.replace(prefix, "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    if (!val.completed || !val.sets) return;
+    const weights = val.sets
+      .map((s,i) => val.completed[i] ? parseFloat(s.weight) : null)
+      .filter(w => w !== null && !isNaN(w) && w > 0);
+    if (weights.length === 0) return;
+    const maxW = Math.max(...weights);
+    const avgW = weights.reduce((a,b)=>a+b,0)/weights.length;
+    const reps = val.sets.map((s,i) => val.completed[i] ? parseFloat(s.reps)||0 : 0);
+    const vol = weights.reduce((sum,w,i) => sum + w*(reps[i]||0), 0);
+    history.push({ date, maxWeight: maxW, avgWeight: parseFloat(avgW.toFixed(1)), totalVol: parseFloat(vol.toFixed(0)) });
+  });
+  history.sort((a,b) => a.date.localeCompare(b.date));
+  return history;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHART DRAWING
+// ═══════════════════════════════════════════════════════════
+function drawChart(canvas, history, color) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const pad = { top: 12, right: 16, bottom: 32, left: 38 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  const vals = history.map(h => h.maxWeight);
+  const minV = Math.max(0, Math.min(...vals) * 0.88);
+  const maxV = Math.max(...vals) * 1.08;
+  const range = maxV - minV || 1;
+
+  const xOf = i => pad.left + (i / (history.length - 1 || 1)) * cw;
+  const yOf = v => pad.top + ch - ((v - minV) / range) * ch;
+
+  // Grid lines
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.top + (ch / 3) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const gridVal = maxV - (range / 3) * i;
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
+    ctx.font = `600 9px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "right";
+    ctx.fillText(gridVal.toFixed(0) + "kg", pad.left - 5, y + 4);
+  }
+
+  if (history.length < 2) {
+    // Single dot
+    const x = xOf(0), y = yOf(vals[0]);
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+    // Label
+    ctx.fillStyle = "#fff"; ctx.font = `700 10px 'Barlow', sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(formatDate(history[0].date), x, H - 8);
+    return;
+  }
+
+  // Gradient fill under line
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+  grad.addColorStop(0, hex2rgb(color, 0.22));
+  grad.addColorStop(1, hex2rgb(color, 0.0));
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(vals[0]));
+  for (let i = 1; i < history.length; i++) {
+    const x0 = xOf(i-1), y0 = yOf(vals[i-1]);
+    const x1 = xOf(i), y1 = yOf(vals[i]);
+    const cpx = (x0 + x1) / 2;
+    ctx.bezierCurveTo(cpx, y0, cpx, y1, x1, y1);
+  }
+  ctx.lineTo(xOf(history.length-1), pad.top + ch);
+  ctx.lineTo(xOf(0), pad.top + ch);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(vals[0]));
+  for (let i = 1; i < history.length; i++) {
+    const x0 = xOf(i-1), y0 = yOf(vals[i-1]);
+    const x1 = xOf(i), y1 = yOf(vals[i]);
+    const cpx = (x0 + x1) / 2;
+    ctx.bezierCurveTo(cpx, y0, cpx, y1, x1, y1);
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
+  // Points + labels
+  history.forEach((h, i) => {
+    const x = xOf(i), y = yOf(vals[i]);
+    // Glow
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
+    ctx.fillStyle = hex2rgb(color, 0.2); ctx.fill();
+    // Dot
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2);
+    ctx.fillStyle = "#0C0C0F"; ctx.fill();
+
+    // Value label above point
+    ctx.fillStyle = "#fff";
+    ctx.font = `700 10px 'JetBrains Mono', monospace`;
+    ctx.textAlign = "center";
+    ctx.fillText(vals[i] + "kg", x, y - 11);
+
+    // Date label
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.font = `600 9px 'Barlow', sans-serif`;
+    ctx.fillText(formatDate(h.date), x, H - 6);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════
+let currentView = "entreno";
+function showView(view) {
+  currentView = view;
+  const isEntreno = view === "entreno";
+  document.getElementById("entreno-view").style.display = isEntreno ? "" : "none";
+  document.getElementById("progreso-view").style.display = isEntreno ? "none" : "block";
+
+  const activeColor = PLAN[activeDay].color;
+  const btnE = document.getElementById("nav-entreno");
+  const btnP = document.getElementById("nav-progreso");
+
+  if (isEntreno) {
+    btnE.style.background = hex2rgb(activeColor, 0.12);
+    btnE.style.borderColor = activeColor;
+    btnE.style.color = activeColor;
+    btnP.style.background = "rgba(255,255,255,0.04)";
+    btnP.style.borderColor = "rgba(255,255,255,0.1)";
+    btnP.style.color = "rgba(255,255,255,0.4)";
+  } else {
+    btnP.style.background = hex2rgb(activeColor, 0.12);
+    btnP.style.borderColor = activeColor;
+    btnP.style.color = activeColor;
+    btnE.style.background = "rgba(255,255,255,0.04)";
+    btnE.style.borderColor = "rgba(255,255,255,0.1)";
+    btnE.style.color = "rgba(255,255,255,0.4)";
+    renderProgreso();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER PROGRESO
+// ═══════════════════════════════════════════════════════════
+function renderProgreso() {
+  const container = document.getElementById("progreso-view");
+  let anyData = false;
+  let html = "";
+
+  // ── Session duration section ──────────────────────────────
+  let sessionHtml = "";
+  DAY_ORDER.forEach(dayKey => {
+    const day = PLAN[dayKey];
+    const color = day.color;
+    const sessHistory = getSessionHistory(dayKey);
+    if (sessHistory.length === 0) return;
+    anyData = true;
+    const best = Math.min(...sessHistory.map(h=>h.durationSecs));
+    const last = sessHistory[sessHistory.length-1].durationSecs;
+    const bm = Math.floor(best/60), bs = best%60;
+    const lm = Math.floor(last/60), ls = last%60;
+    const canvasId = 'sess-chart-' + dayKey.replace(/ /g,'_');
+    sessionHtml += `
+      <div class="prog-session-card" style="border-color:${hex2rgb(color,0.15)}">
+        <div class="prog-session-title">
+          <div class="prog-day-dot" style="background:${color}"></div>
+          <span style="color:${color}">${day.label}</span>
+          <span style="color:rgba(255,255,255,0.25);font-size:11px;font-weight:400">${day.sub}</span>
+          <div style="margin-left:auto;font-size:11px;font-family:'JetBrains Mono',monospace;color:${color};background:${hex2rgb(color,0.1)};border:1px solid ${hex2rgb(color,0.3)};padding:3px 8px;border-radius:8px">
+            mejor ${bm}:${String(bs).padStart(2,'0')}
+          </div>
+        </div>
+        <canvas id="${canvasId}" class="prog-chart-time"></canvas>
+        <div class="prog-stats-row" style="margin-top:10px">
+          <div class="prog-stat">
+            <div class="prog-stat-val" style="color:${color}">${sessHistory.length}</div>
+            <div class="prog-stat-lbl">Sesiones</div>
+          </div>
+          <div class="prog-stat">
+            <div class="prog-stat-val" style="color:${color}">${lm}:${String(ls).padStart(2,'0')}</div>
+            <div class="prog-stat-lbl">Última</div>
+          </div>
+          <div class="prog-stat">
+            <div class="prog-stat-val" style="color:${color}">${bm}:${String(bs).padStart(2,'0')}</div>
+            <div class="prog-stat-lbl">Mejor</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  if (sessionHtml) {
+    html += `<div style="margin-bottom:8px;padding:16px 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>` + sessionHtml;
+  }
+
+  DAY_ORDER.forEach(dayKey => {
+    const day = PLAN[dayKey];
+    const color = day.color;
+    let dayHtml = "";
+
+    day.blocks.forEach(block => {
+      block.exercises.forEach(ex => {
+        const history = getExerciseHistory(dayKey, block.id, ex.id);
+        if (history.length === 0) return;
+        anyData = true;
+
+        const best = Math.max(...history.map(h => h.maxWeight));
+        const first = history[0].maxWeight;
+        const last = history[history.length-1].maxWeight;
+        const delta = last - first;
+        const deltaStr = delta >= 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
+        const sessions = history.length;
+        const totalVol = history.reduce((s,h) => s + h.totalVol, 0);
+        const trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
+        const trendColor = delta > 0 ? "#4ade80" : delta < 0 ? "#f87171" : "rgba(255,255,255,0.4)";
+        const canvasId = `chart-${dayKey}-${block.id}-${ex.id}`.replace(/ /g,"_");
+
+        dayHtml += `
+          <div class="prog-ex-card">
+            <div class="prog-ex-header">
+              <div class="ex-id-badge" style="color:${color};background:${hex2rgb(color,0.12)};border-color:${color}">${ex.id}</div>
+              <div class="prog-ex-name">${ex.name}</div>
+              <div class="prog-ex-best" style="color:${color};background:${hex2rgb(color,0.1)};border-color:${hex2rgb(color,0.3)}">
+                ${best}kg max
+              </div>
+            </div>
+            <div class="prog-canvas-wrap">
+              <canvas id="${canvasId}" class="prog-chart"></canvas>
+            </div>
+            <div class="prog-stats-row">
+              <div class="prog-stat">
+                <div class="prog-stat-val" style="color:${color}">${sessions}</div>
+                <div class="prog-stat-lbl">Sesiones</div>
+              </div>
+              <div class="prog-stat">
+                <div class="prog-stat-val" style="color:${trendColor}">${trend} ${Math.abs(delta).toFixed(1)}kg</div>
+                <div class="prog-stat-lbl">Evolución</div>
+              </div>
+              <div class="prog-stat">
+                <div class="prog-stat-val" style="color:${color}">${totalVol >= 1000 ? (totalVol/1000).toFixed(1)+"t" : totalVol+"kg"}</div>
+                <div class="prog-stat-lbl">Vol. total</div>
+              </div>
+            </div>
+          </div>`;
+      });
+    });
+
+    if (dayHtml) {
+      html += `
+        <div class="prog-day-section">
+          <div class="prog-day-title">
+            <div class="prog-day-dot" style="background:${color}"></div>
+            <span style="color:${color}">${day.label}</span>
+            <span style="color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:0">${day.sub}</span>
+          </div>
+          ${dayHtml}
+        </div>`;
+    }
+  });
+
+  if (!anyData) {
+    html = `
+      <div class="prog-no-data">
+        <div class="prog-no-data-icon">📊</div>
+        <div class="prog-no-data-txt">Sin datos todavía</div>
+        <div class="prog-no-data-sub">Completa series marcando el ✓ para ver tu evolución aquí</div>
+      </div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Draw all charts after DOM is ready
+  if (anyData) {
+    requestAnimationFrame(() => {
+      // Exercise load charts
+      DAY_ORDER.forEach(dayKey => {
+        const day = PLAN[dayKey];
+        day.blocks.forEach(block => {
+          block.exercises.forEach(ex => {
+            const history = getExerciseHistory(dayKey, block.id, ex.id);
+            if (history.length === 0) return;
+            const canvasId = `chart-${dayKey}-${block.id}-${ex.id}`.replace(/ /g,"_");
+            const canvas = document.getElementById(canvasId);
+            if (canvas) drawChart(canvas, history, day.color);
+          });
+        });
+        // Session time chart
+        const sessHistory = getSessionHistory(dayKey);
+        if (sessHistory.length > 0) {
+          const canvas = document.getElementById('sess-chart-' + dayKey.replace(/ /g,'_'));
+          if (canvas) drawTimeChart(canvas, sessHistory, PLAN[dayKey].color);
+        }
+      });
+    });
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// ROUTINE TIMER
+// ═══════════════════════════════════════════════════════════
+let routineStartTime = null;
+let routineInterval = null;
+
+function fmtDuration(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function startRoutine() {
+  if (routineInterval) return; // already running
+  routineStartTime = Date.now();
+  const color = PLAN[activeDay].color;
+  const bar = document.getElementById('routine-timer-bar');
+  bar.classList.add('active');
+  bar.style.borderColor = hex2rgb(color, 0.3);
+  document.getElementById('rt-time').style.color = color;
+  document.getElementById('btn-start-routine').style.display = 'none';
+  const finBtn = document.getElementById('btn-rt-finish');
+  finBtn.style.background = hex2rgb(color, 0.15);
+  finBtn.style.color = color;
+  finBtn.style.border = '1.5px solid ' + hex2rgb(color, 0.4);
+
+  routineInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - routineStartTime) / 1000);
+    document.getElementById('rt-time').textContent = fmtDuration(elapsed);
+  }, 1000);
+}
+
+function finishRoutine() {
+  if (!routineStartTime) return;
+  clearInterval(routineInterval);
+  routineInterval = null;
+  const elapsed = Math.floor((Date.now() - routineStartTime) / 1000);
+  routineStartTime = null;
+
+  // Save session duration
+  const d = loadData();
+  const key = 'session_' + activeDay.replace(/ /g,'_') + '_' + todayStr();
+  d[key] = { date: todayStr(), day: activeDay, durationSecs: elapsed };
+  saveData(d);
+
+  // Update UI
+  const bar = document.getElementById('routine-timer-bar');
+  bar.classList.remove('active');
+  document.getElementById('rt-time').textContent = '00:00';
+  document.getElementById('btn-start-routine').style.display = 'flex';
+
+  // Show a brief confirmation toast
+  showToast('Sesión guardada · ' + fmtDuration(elapsed), PLAN[activeDay].color);
+}
+
+function resetRoutineTimer() {
+  if (routineInterval) { clearInterval(routineInterval); routineInterval = null; }
+  routineStartTime = null;
+  const bar = document.getElementById('routine-timer-bar');
+  if (bar) bar.classList.remove('active');
+  document.getElementById('rt-time').textContent = '00:00';
+  const startBtn = document.getElementById('btn-start-routine');
+  if (startBtn) startBtn.style.display = 'flex';
+}
+
+function showToast(msg, color) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:999;transition:opacity 0.4s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = hex2rgb(color, 0.15);
+  toast.style.border = '1px solid ' + hex2rgb(color, 0.4);
+  toast.style.color = color;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SESSION TIME HISTORY
+// ═══════════════════════════════════════════════════════════
+function getSessionHistory(dayKey) {
+  const all = loadData();
+  const prefix = 'session_' + dayKey.replace(/ /g,'_') + '_';
+  const history = [];
+  Object.entries(all).forEach(([key, val]) => {
+    if (!key.startsWith(prefix)) return;
+    if (val.durationSecs && val.date) {
+      history.push({ date: val.date, durationSecs: val.durationSecs });
+    }
+  });
+  history.sort((a,b) => a.date.localeCompare(b.date));
+  return history;
+}
+
+function drawTimeChart(canvas, history, color) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const pad = { top: 18, right: 16, bottom: 32, left: 46 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  const vals = history.map(h => h.durationSecs);
+  const minV = Math.max(0, Math.min(...vals) * 0.85);
+  const maxV = Math.max(...vals) * 1.1;
+  const range = maxV - minV || 1;
+  const xOf = i => pad.left + (i / (history.length - 1 || 1)) * cw;
+  const yOf = v => pad.top + ch - ((v - minV) / range) * ch;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.top + (ch / 3) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const gv = maxV - (range / 3) * i;
+    const gm = Math.floor(gv / 60), gs = Math.floor(gv % 60);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = "600 9px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'right';
+    ctx.fillText(gm + ':' + String(gs).padStart(2,'0'), pad.left - 5, y + 4);
+  }
+
+  if (history.length < 2) {
+    const x = xOf(0), y = yOf(vals[0]);
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = "700 10px 'Barlow', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.fillText(formatDate(history[0].date), x, H - 8);
+    return;
+  }
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+  grad.addColorStop(0, hex2rgb(color, 0.22));
+  grad.addColorStop(1, hex2rgb(color, 0.0));
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(vals[0]));
+  for (let i = 1; i < history.length; i++) {
+    const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;
+    ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);
+  }
+  ctx.lineTo(xOf(history.length-1), pad.top+ch);
+  ctx.lineTo(xOf(0), pad.top+ch);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+
+  // Line
+  ctx.beginPath(); ctx.moveTo(xOf(0), yOf(vals[0]));
+  for (let i = 1; i < history.length; i++) {
+    const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;
+    ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);
+  }
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke();
+
+  // Points
+  history.forEach((h, i) => {
+    const x = xOf(i), y = yOf(vals[i]);
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
+    ctx.fillStyle = hex2rgb(color,0.2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2);
+    ctx.fillStyle = '#0C0C0F'; ctx.fill();
+    const m = Math.floor(vals[i]/60), s = vals[i]%60;
+    ctx.fillStyle = '#fff'; ctx.font = "700 10px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'center';
+    ctx.fillText(m + ':' + String(s).padStart(2,'0'), x, y - 11);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = "600 9px 'Barlow', sans-serif";
+    ctx.fillText(formatDate(h.date), x, H - 6);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SVG ICONS
+// ═══════════════════════════════════════════════════════════
+const SVG_CHECK = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const SVG_CHECK_SM = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const SVG_ZAP = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+const SVG_SKIP = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>`;
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let activeDay = "Torso A";
+const timers = {};
+
+// ═══════════════════════════════════════════════════════════
+// REST TIMER
+// ═══════════════════════════════════════════════════════════
+function startTimer(timerKey, duration, color, containerId) {
+  if (timers[timerKey]) clearInterval(timers[timerKey].interval);
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  timers[timerKey] = { remaining: duration, duration, interval: null };
+
+  function render() {
+    const t = timers[timerKey];
+    if (!t) return;
+    const pct = (t.remaining / t.duration) * 100;
+    const rv = 26, circ = 2 * Math.PI * rv;
+    const dash = (pct / 100) * circ;
+    container.style.display = "flex";
+    container.style.borderColor = hex2rgb(color, 0.2);
+    container.innerHTML = `
+      <svg class="timer-svg" width="66" height="66">
+        <circle cx="33" cy="33" r="${rv}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+        <circle cx="33" cy="33" r="${rv}" fill="none" stroke="${color}" stroke-width="5"
+          stroke-dasharray="${dash} ${circ}" stroke-linecap="round" style="transition:stroke-dasharray 0.9s linear"/>
+        <text x="33" y="33" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="13" font-weight="700" font-family="monospace"
+          style="transform:rotate(90deg);transform-origin:33px 33px">${t.remaining}s</text>
+      </svg>
+      <div style="flex:1">
+        <div class="timer-label">DESCANSO</div>
+        <div class="timer-val">${t.remaining}s restantes</div>
+        <div class="timer-status">Recuperando…</div>
+      </div>
+      <button class="btn-skip" onclick="skipTimer('${timerKey}','${containerId}')">${SVG_SKIP} Skip</button>`;
+  }
+
+  render();
+  timers[timerKey].interval = setInterval(() => {
+    timers[timerKey].remaining--;
+    if (timers[timerKey].remaining <= 0) {
+      clearInterval(timers[timerKey].interval);
+      delete timers[timerKey];
+      const c = document.getElementById(containerId);
+      if (c) { c.style.display = "none"; c.innerHTML = ""; }
+    } else render();
+  }, 1000);
+}
+
+function skipTimer(timerKey, containerId) {
+  if (timers[timerKey]) { clearInterval(timers[timerKey].interval); delete timers[timerKey]; }
+  const c = document.getElementById(containerId);
+  if (c) { c.style.display = "none"; c.innerHTML = ""; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESS BAR
+// ═══════════════════════════════════════════════════════════
+function updateProgress() {
+  const day = PLAN[activeDay];
+  const d = loadData();
+  let total = 0, done = 0;
+  day.blocks.forEach(b => b.exercises.forEach(e => {
+    const entry = d[dataKey(activeDay, b.id, e.id)];
+    total += e.sets;
+    if (entry?.completed) done += entry.completed.filter(Boolean).length;
+  }));
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const color = day.color;
+  document.getElementById("progress-val").textContent = `${done}/${total} series · ${pct}%`;
+  document.getElementById("progress-val").style.color = color;
+  document.getElementById("progress-bar").style.width = pct + "%";
+  document.getElementById("progress-bar").style.background = color;
+  document.getElementById("progress-bar").style.boxShadow = `0 0 8px ${hex2rgb(color, 0.53)}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHECK SET
+// ═══════════════════════════════════════════════════════════
+function handleCheck(btn) {
+  const dayKey = btn.dataset.day;
+  const blockId = btn.dataset.block;
+  const exId = btn.dataset.ex;
+  const setIdx = parseInt(btn.dataset.set);
+  const numSets = parseInt(btn.dataset.numsets);
+  const restDuration = parseInt(btn.dataset.rest);
+  const color = btn.dataset.color;
+  const isSS = btn.dataset.iss === "true";
+  const blockExIds = btn.dataset.exids.split(',');
+  checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, isSS, blockExIds);
+}
+
+function checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, isSS, blockExIds) {
+  const data = getExData(dayKey, blockId, exId, numSets);
+  for (let i = 0; i < numSets; i++) {
+    const wEl = document.getElementById(`inp-w-${dayKey}-${blockId}-${exId}-${i}`);
+    const rEl = document.getElementById(`inp-r-${dayKey}-${blockId}-${exId}-${i}`);
+    if (wEl) data.sets[i].weight = wEl.value;
+    if (rEl) data.sets[i].reps = rEl.value;
+  }
+  data.completed[setIdx] = true;
+  setExData(dayKey, blockId, exId, data);
+  renderSetRow(dayKey, blockId, exId, setIdx, data, color);
+
+  // Timer logic: SS fires after all exercises in block complete same round, non-SS fires per set
+  if (isSS) {
+    const exIds = Array.isArray(blockExIds) ? blockExIds : JSON.parse(blockExIds);
+    const allRoundDone = exIds.every(eid => {
+      const d = getExData(dayKey, blockId, eid, numSets);
+      return d.completed[setIdx] === true;
+    });
+    if (allRoundDone) {
+      startTimer(`timer-block-${dayKey}-${blockId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
+    }
+  } else {
+    startTimer(`timer-${dayKey}-${blockId}-${exId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
+  }
+
+  if (data.completed.every(Boolean)) {
+    const badge = document.getElementById(`done-badge-${dayKey}-${blockId}-${exId}`);
+    if (badge) badge.style.display = "flex";
+    const card = document.getElementById(`ex-card-${dayKey}-${blockId}-${exId}`);
+    if (card) { card.style.background = "rgba(255,255,255,0.02)"; card.style.borderColor = "rgba(255,255,255,0.06)"; }
+  }
+  updateProgress();
+}
+
+function renderSetRow(dayKey, blockId, exId, setIdx, data, color) {
+  const done = data.completed[setIdx];
+  const row = document.getElementById(`set-row-${dayKey}-${blockId}-${exId}-${setIdx}`);
+  if (!row) return;
+  row.className = "set-row" + (done ? " done" : "");
+  const numEl = row.querySelector(".set-num");
+  if (done) {
+    numEl.innerHTML = SVG_CHECK_SM;
+    numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:all 0.2s;flex-shrink:0;color:${color};border:1.5px solid ${color};background:${hex2rgb(color,0.12)}`;
+  } else {
+    numEl.textContent = setIdx + 1;
+    numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:all 0.2s;flex-shrink:0;color:rgba(255,255,255,0.4);border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.07)`;
+  }
+  const wInp = row.querySelector(".inp-w");
+  const rInp = row.querySelector(".inp-r");
+  const btn = row.querySelector(".btn-check");
+  if (wInp) wInp.disabled = done;
+  if (rInp) rInp.disabled = done;
+  if (btn) {
+    btn.style.background = done ? hex2rgb(color,0.1) : color;
+    btn.style.color = done ? color : "#000";
+    btn.style.boxShadow = done ? "none" : `0 3px 12px ${hex2rgb(color,0.27)}`;
+    btn.style.cursor = done ? "default" : "pointer";
+    btn.disabled = done;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTES / INPUTS
+// ═══════════════════════════════════════════════════════════
+function toggleNotes(dayKey, blockId, exId) {
+  const ta = document.getElementById(`notes-${dayKey}-${blockId}-${exId}`);
+  const btn = document.getElementById(`btn-notes-${dayKey}-${blockId}-${exId}`);
+  if (!ta) return;
+  const showing = ta.style.display === "block";
+  ta.style.display = showing ? "none" : "block";
+  btn.classList.toggle("active", !showing);
+}
+function saveNote(dayKey, blockId, exId, numSets, val) {
+  const data = getExData(dayKey, blockId, exId, numSets);
+  data.notes = val; setExData(dayKey, blockId, exId, data);
+}
+function saveWeight(dayKey, blockId, exId, setIdx, numSets, val) {
+  const data = getExData(dayKey, blockId, exId, numSets);
+  data.sets[setIdx].weight = val; setExData(dayKey, blockId, exId, data);
+}
+function saveReps(dayKey, blockId, exId, setIdx, numSets, val) {
+  const data = getExData(dayKey, blockId, exId, numSets);
+  data.sets[setIdx].reps = val; setExData(dayKey, blockId, exId, data);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER EXERCISE CARD
+// ═══════════════════════════════════════════════════════════
+function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
+  const data = getExData(dayKey, block.id, ex.id, ex.sets);
+  const allDone = data.completed.every(Boolean);
+  let br;
+  if (!isSS) br = "18px";
+  else if (isFirst && isLast) br = "18px";
+  else if (isFirst) br = "18px 18px 4px 4px";
+  else if (isLast) br = "4px 4px 18px 18px";
+  else br = "4px";
+
+  const cardBg = allDone ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.045)";
+  const cardBorder = allDone ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)";
+  const idColor = allDone ? "rgba(255,255,255,0.25)" : color;
+  const idBg = allDone ? "rgba(255,255,255,0.05)" : hex2rgb(color,0.13);
+  const idBorder = allDone ? "rgba(255,255,255,0.1)" : color;
+  const nameColor = allDone ? "rgba(255,255,255,0.35)" : "#fff";
+  const repsColor = allDone ? "rgba(255,255,255,0.2)" : color;
+
+  let setRowsHTML = "";
+  for (let i = 0; i < ex.sets; i++) {
+    const done = data.completed[i];
+    const w = data.sets[i]?.weight||"", r = data.sets[i]?.reps||"";
+    const numStyle = done
+      ? `color:${color};border-color:${color};background:${hex2rgb(color,0.12)}`
+      : `color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.07)`;
+    const btnBg = done ? hex2rgb(color,0.1) : color;
+    const btnColor = done ? color : "#000";
+    setRowsHTML += `
+      <div id="set-row-${dayKey}-${block.id}-${ex.id}-${i}" class="set-row${done?" done":""}">
+        <div class="set-num${done?" done":""}" style="${numStyle}">${done?SVG_CHECK_SM:(i+1)}</div>
+        <input id="inp-w-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-w" type="number" placeholder="kg" value="${w}" ${done?"disabled":""}
+          oninput="saveWeight('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
+        <span class="set-sep">×</span>
+        <input id="inp-r-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-r" type="number" placeholder="reps" value="${r}" ${done?"disabled":""}
+          oninput="saveReps('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
+        <button class="btn-check" ${done?"disabled":""} style="background:${btnBg};color:${btnColor};box-shadow:${done?"none":`0 3px 12px ${hex2rgb(color,0.27)}`};cursor:${done?"default":"pointer"}"
+          data-day="${dayKey}" data-block="${block.id}" data-ex="${ex.id}" data-set="${i}" data-numsets="${ex.sets}" data-rest="${block.rest}" data-color="${color}" data-iss="${isSS}" data-exids="${block.exercises.map(e=>e.id).join(',')}"
+          onclick="handleCheck(this)">
+          ${SVG_CHECK}
+        </button>
+      </div>`;
+  }
+
+  return `
+    <div id="ex-card-${dayKey}-${block.id}-${ex.id}" class="ex-card"
+      style="border-radius:${br};background:${cardBg};border-color:${cardBorder};margin-bottom:${isSS&&!isLast?"2px":"12px"}">
+      <div class="ex-header">
+        <div class="ex-id-badge" style="color:${idColor};background:${idBg};border-color:${idBorder}">${ex.id}</div>
+        <div style="flex:1">
+          <div class="ex-name" style="color:${nameColor}">${ex.name}</div>
+          <div class="ex-meta">${ex.sets} series · <span style="color:${repsColor}">${ex.repsLabel} reps</span></div>
+        </div>
+        <button id="btn-notes-${dayKey}-${block.id}-${ex.id}" class="btn-notes" onclick="toggleNotes('${dayKey}','${block.id}','${ex.id}')">📝</button>
+      </div>
+      <textarea id="notes-${dayKey}-${block.id}-${ex.id}" class="notes-textarea"
+        placeholder="Notas libres: sensaciones, técnica, ajuste de peso..."
+        oninput="saveNote('${dayKey}','${block.id}','${ex.id}',${ex.sets},this.value)">${data.notes}</textarea>
+      <div class="col-headers">
+        <div></div><div class="col-hdr">PESO (kg)</div><div></div><div class="col-hdr">REPS</div><div class="col-hdr">✓</div>
+      </div>
+      ${setRowsHTML}
+
+      <div id="done-badge-${dayKey}-${block.id}-${ex.id}" class="done-badge" style="display:${allDone?"flex":"none"};color:${color}">
+        ${SVG_CHECK_SM} Ejercicio completado
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER BLOCK
+// ═══════════════════════════════════════════════════════════
+function renderBlock(block, dayKey, color) {
+  const isSS = block.ss;
+  const headerHTML = isSS
+    ? `<div class="ss-badge" style="background:${hex2rgb(color,0.094)};border-color:${hex2rgb(color,0.267)}">${SVG_ZAP}<span class="ss-badge-txt" style="color:${color}">Súper Serie ${block.id} · ${block.rest}s descanso</span></div>`
+    : `<span class="block-lbl">Bloque ${block.id} · ${block.rest}s descanso</span>`;
+  let exercisesHTML = "";
+  block.exercises.forEach((ex,i) => {
+    exercisesHTML += renderExerciseCard(ex, block, dayKey, color, isSS, i===0, i===block.exercises.length-1);
+  });
+  return `
+    <div class="block-wrap">
+      <div class="block-header">${headerHTML}</div>
+      <div class="block-exercises" style="border-left:3px solid ${isSS?hex2rgb(color,0.33):"rgba(255,255,255,0.07)"}">${exercisesHTML}</div>
+      <div id="timerbox-block-${dayKey}-${block.id}" class="timer-wrap" style="display:none;margin-left:15px"></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER DAY
+// ═══════════════════════════════════════════════════════════
+function renderDay() {
+  const day = PLAN[activeDay];
+  const color = day.color;
+
+  document.getElementById("bg-glow").style.background = `radial-gradient(circle, ${hex2rgb(color,0.082)} 0%, transparent 70%)`;
+  document.getElementById("day-label").textContent = day.label;
+  document.getElementById("day-sub").textContent = day.sub;
+  document.getElementById("today-str").textContent = new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"short"});
+
+  const sel = document.getElementById("day-selector");
+  sel.innerHTML = DAY_ORDER.map(d => {
+    const isActive = d === activeDay, dc = PLAN[d].color;
+    return `<button class="day-btn" style="background:${isActive?hex2rgb(dc,0.094):"rgba(255,255,255,0.04)"};border-color:${isActive?dc:"rgba(255,255,255,0.08)"}" onclick="switchDay('${d}')">
+      <div class="day-btn-label" style="color:${isActive?dc:"rgba(255,255,255,0.35)"}">${PLAN[d].label.split(" ").map(w=>`<div>${w}</div>`).join("")}</div>
+    </button>`;
+  }).join("");
+
+  document.getElementById("blocks").innerHTML = day.blocks.map(b => renderBlock(b, activeDay, color)).join("");
+  updateProgress();
+  updateNavStyle();
+  // Style start routine button
+  const startBtn = document.getElementById('btn-start-routine');
+  if (startBtn && !routineInterval) {
+    startBtn.style.background = hex2rgb(color, 0.15);
+    startBtn.style.color = color;
+    startBtn.style.border = '1.5px solid ' + hex2rgb(color, 0.4);
+  }
+}
+
+function updateNavStyle() {
+  const color = PLAN[activeDay].color;
+  const isEntreno = currentView === "entreno";
+  const btnE = document.getElementById("nav-entreno");
+  const btnP = document.getElementById("nav-progreso");
+  btnE.style.background = isEntreno ? hex2rgb(color,0.12) : "rgba(255,255,255,0.04)";
+  btnE.style.borderColor = isEntreno ? color : "rgba(255,255,255,0.1)";
+  btnE.style.color = isEntreno ? color : "rgba(255,255,255,0.4)";
+  btnP.style.background = !isEntreno ? hex2rgb(color,0.12) : "rgba(255,255,255,0.04)";
+  btnP.style.borderColor = !isEntreno ? color : "rgba(255,255,255,0.1)";
+  btnP.style.color = !isEntreno ? color : "rgba(255,255,255,0.4)";
+}
+
+// ═══════════════════════════════════════════════════════════
+// SWITCH / CLEAR
+// ═══════════════════════════════════════════════════════════
+function switchDay(d) {
+  Object.keys(timers).forEach(k => { clearInterval(timers[k].interval); delete timers[k]; });
+  activeDay = d;
+  resetRoutineTimer();
+  renderDay();
+  if (currentView === "progreso") renderProgreso();
+}
+
+document.getElementById("btn-clear").addEventListener("click", () => {
+  const ts = todayStr(), d = loadData();
+  Object.keys(d).forEach(k => { if (k.startsWith(`${ts}_${activeDay}`)) delete d[k]; });
+  saveData(d);
+  Object.keys(timers).forEach(k => { clearInterval(timers[k].interval); delete timers[k]; });
+  renderDay();
+});
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderDay();
+showView("entreno");
+</script>
+</body>
+</html>

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>V-Shape Program</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -171,6 +173,42 @@
   }
   canvas.prog-chart-time { width: 100%; height: 130px; display: block; }
 
+
+  /* ── DRIVE SYNC ───────────────────────────────────────── */
+  #drive-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  #drive-status {
+    flex: 1; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+  }
+  #drive-status.ok { color: #4ade80; }
+  #drive-status.err { color: #f87171; }
+  #drive-status.syncing { color: #facc15; }
+  #btn-drive-login {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(66,133,244,0.15); border: 1px solid rgba(66,133,244,0.4);
+    border-radius: 10px; color: #7ab3ff; padding: 7px 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  #btn-drive-login:hover { background: rgba(66,133,244,0.25); }
+  #btn-drive-logout {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: rgba(255,255,255,0.3); padding: 7px 10px;
+    font-size: 10px; font-weight: 600; cursor: pointer;
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.2);
+  }
+  .sync-dot.ok { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+  .sync-dot.syncing { background: #facc15; animation: pulse 1s infinite; }
+  .sync-dot.err { background: #f87171; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
   /* ── BOTTOM BAR ───────────────────────────────────────── */
   #bottom-bar {
     position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -187,6 +225,14 @@
 
 <div id="bg-glow"></div>
 <div id="app">
+  <div id="drive-bar">
+    <div class="sync-dot" id="sync-dot"></div>
+    <div id="drive-status">Sin conexión a Drive</div>
+    <button id="btn-drive-login" onclick="driveLogin()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Conectar Drive
+    </button>
+  </div>
   <!-- MAIN NAV -->
   <div id="main-nav">
     <button id="nav-entreno" class="main-nav-btn" onclick="showView('entreno')">🏋️ Entrenamiento</button>
@@ -264,7 +310,7 @@ const PLAN = {
       ]},
       { id: "B", ss: true, rest: 90, exercises: [
         { id: "B1", name: "Elevaciones Laterales", sets: 4, repsLabel: "15-20" },
-        { id: "B2", name: "Remo Barra", sets: 3, repsLabel: "10" },
+        { id: "B2", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
       ]},
       { id: "C", ss: true, rest: 90, exercises: [
         { id: "C1", name: "Face Pulls", sets: 3, repsLabel: "15" },
@@ -284,7 +330,7 @@ const PLAN = {
       ]},
       { id: "C", ss: true, rest: 90, exercises: [
         { id: "C1", name: "Sentadilla Búlgara", sets: 3, repsLabel: "10" },
-        { id: "C2", name: "Planchas", sets: 3, repsLabel: "1 min" },
+        { id: "C2", name: "Vacío Abdominal", sets: 3, repsLabel: "30s" },
       ]},
     ],
   },
@@ -297,7 +343,7 @@ const PLAN = {
       ]},
       { id: "B", ss: true, rest: 90, exercises: [
         { id: "B1", name: "Remo Mancuerna 1 Mano", sets: 3, repsLabel: "10-12" },
-        { id: "B2", name: "Fondos en paralelas", sets: 3, repsLabel: "8-10" },
+        { id: "B2", name: "Flexiones Manos Elevadas", sets: 3, repsLabel: "15" },
       ]},
       { id: "C", ss: true, rest: 90, exercises: [
         { id: "C1", name: "Elevaciones Laterales", sets: 3, repsLabel: "15" },
@@ -1193,6 +1239,198 @@ document.getElementById("btn-clear").addEventListener("click", () => {
   saveData(d);
   Object.keys(timers).forEach(k => { clearInterval(timers[k].interval); delete timers[k]; });
   renderDay();
+});
+
+
+// ═══════════════════════════════════════════════════════════
+// GOOGLE DRIVE SYNC
+// ═══════════════════════════════════════════════════════════
+const DRIVE_CLIENT_ID = '601691093802-k475gd25ejmt6qippldvam0fc3ed0jhv.apps.googleusercontent.com';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILE_NAME = 'vshape-tracker-data.json';
+
+let driveAccessToken = null;
+let driveFileId = null;
+let driveSyncTimeout = null;
+let driveUserEmail = null;
+
+// ── Auth ────────────────────────────────────────────────────
+function driveLogin() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: DRIVE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: async (resp) => {
+      if (resp.error) { setDriveStatus('err', 'Error al autenticar'); return; }
+      driveAccessToken = resp.access_token;
+      // Get user info
+      try {
+        const ui = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + driveAccessToken }
+        });
+        const udata = await ui.json();
+        driveUserEmail = udata.email || '';
+      } catch(e) {}
+      setDriveStatus('syncing', 'Conectando…');
+      showDriveConnected();
+      await driveLoadOrCreate();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function driveLogout() {
+  if (driveAccessToken) google.accounts.oauth2.revoke(driveAccessToken);
+  driveAccessToken = null; driveFileId = null; driveUserEmail = null;
+  setDriveStatus('', 'Sin conexión a Drive');
+  document.getElementById('btn-drive-login').style.display = 'flex';
+  const logoutBtn = document.getElementById('btn-drive-logout');
+  if (logoutBtn) logoutBtn.remove();
+  document.getElementById('sync-dot').className = 'sync-dot';
+}
+
+function showDriveConnected() {
+  const loginBtn = document.getElementById('btn-drive-login');
+  loginBtn.style.display = 'none';
+  if (!document.getElementById('btn-drive-logout')) {
+    const btn = document.createElement('button');
+    btn.id = 'btn-drive-logout';
+    btn.textContent = 'Desconectar';
+    btn.onclick = driveLogout;
+    document.getElementById('drive-bar').appendChild(btn);
+  }
+}
+
+function setDriveStatus(state, msg) {
+  const el = document.getElementById('drive-status');
+  const dot = document.getElementById('sync-dot');
+  el.textContent = msg;
+  el.className = state ? 'ok' === state ? 'ok' : state : '';
+  dot.className = 'sync-dot' + (state ? ' ' + state : '');
+}
+
+// ── Find or create file in Drive ────────────────────────────
+async function driveLoadOrCreate() {
+  try {
+    // Search for existing file
+    const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`, {
+      headers: { Authorization: 'Bearer ' + driveAccessToken }
+    });
+    const data = await res.json();
+    if (data.files && data.files.length > 0) {
+      driveFileId = data.files[0].id;
+      // Load remote data and merge
+      await drivePullAndMerge();
+    } else {
+      // Create new file
+      await driveCreateFile();
+      setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Drive conectado');
+    }
+  } catch(e) {
+    setDriveStatus('err', 'Error al conectar');
+    console.error('Drive error:', e);
+  }
+}
+
+async function driveCreateFile() {
+  const body = JSON.stringify(loadData());
+  const meta = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
+  form.append('file', new Blob([body], {type:'application/json'}));
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + driveAccessToken },
+    body: form
+  });
+  const d = await res.json();
+  driveFileId = d.id;
+}
+
+// ── Pull remote → merge with local ─────────────────────────
+async function drivePullAndMerge() {
+  setDriveStatus('syncing', 'Sincronizando…');
+  try {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
+      headers: { Authorization: 'Bearer ' + driveAccessToken }
+    });
+    const remote = await res.json();
+    const local = loadData();
+    // Merge: remote wins on conflict (most recent), local adds any keys not in remote
+    const merged = Object.assign({}, remote, local);
+    // For each key in both, keep whichever has more completed sets
+    Object.keys(remote).forEach(k => {
+      if (local[k] && remote[k]) {
+        // If both exist, take the one with more completed sets
+        const lc = local[k].completed ? local[k].completed.filter(Boolean).length : 0;
+        const rc = remote[k].completed ? remote[k].completed.filter(Boolean).length : 0;
+        merged[k] = rc >= lc ? remote[k] : local[k];
+      }
+    });
+    saveData(merged);
+    renderDay();
+    await drivePush(merged);
+    setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Sincronizado');
+  } catch(e) {
+    setDriveStatus('err', 'Error al sincronizar');
+    console.error('Pull error:', e);
+  }
+}
+
+// ── Push local → Drive ──────────────────────────────────────
+async function drivePush(data) {
+  if (!driveAccessToken || !driveFileId) return;
+  try {
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: 'Bearer ' + driveAccessToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data || loadData())
+    });
+  } catch(e) {
+    console.error('Push error:', e);
+  }
+}
+
+// ── Auto-sync: debounced push after any data change ─────────
+const _origSaveData = saveData;
+function saveData(d) {
+  _origSaveData(d);
+  if (driveAccessToken && driveFileId) {
+    clearTimeout(driveSyncTimeout);
+    setDriveStatus('syncing', 'Guardando…');
+    driveSyncTimeout = setTimeout(async () => {
+      await drivePush(d);
+      setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Guardado en Drive');
+    }, 1500);
+  }
+}
+
+// ── Restore session on load if token persisted ──────────────
+window.addEventListener('load', () => {
+  // Try silent token refresh after gsi loads
+  setTimeout(() => {
+    try {
+      if (typeof google !== 'undefined' && google.accounts) {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: DRIVE_CLIENT_ID,
+          scope: DRIVE_SCOPE,
+          prompt: '',
+          callback: async (resp) => {
+            if (resp && !resp.error) {
+              driveAccessToken = resp.access_token;
+              showDriveConnected();
+              setDriveStatus('syncing', 'Reconectando…');
+              await driveLoadOrCreate();
+            }
+          }
+        });
+        client.requestAccessToken({ prompt: '' });
+      }
+    } catch(e) {}
+  }, 2000);
 });
 
 // ═══════════════════════════════════════════════════════════

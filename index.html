@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>V-Shape Program</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -232,7 +231,8 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Conectar Drive
     </button>
-  </div>
+    <div id="drive-error-log" style="display:none;padding:8px 20px;background:rgba(248,113,113,0.08);border-bottom:1px solid rgba(248,113,113,0.2);font-size:11px;font-family:monospace;color:#f87171;word-break:break-all;max-height:120px;overflow-y:auto;white-space:pre-wrap"></div>
+</div>
   <!-- MAIN NAV -->
   <div id="main-nav">
     <button id="nav-entreno" class="main-nav-btn" onclick="showView('entreno')">🏋️ Entrenamiento</button>
@@ -1256,11 +1256,16 @@ let driveUserEmail = null;
 
 // ── Auth ────────────────────────────────────────────────────
 function driveLogin() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    setDriveStatus('err', 'Cargando Google…', 'Espera unos segundos y vuelve a intentarlo');
+    setTimeout(driveLogin, 2000);
+    return;
+  }
   const client = google.accounts.oauth2.initTokenClient({
     client_id: DRIVE_CLIENT_ID,
     scope: DRIVE_SCOPE,
     callback: async (resp) => {
-      if (resp.error) { setDriveStatus('err', 'Error al autenticar'); return; }
+      if (resp.error) { setDriveStatus('err', 'Error al autenticar', JSON.stringify(resp)); return; }
       driveAccessToken = resp.access_token;
       // Get user info
       try {
@@ -1300,12 +1305,21 @@ function showDriveConnected() {
   }
 }
 
-function setDriveStatus(state, msg) {
+function setDriveStatus(state, msg, detail) {
   const el = document.getElementById('drive-status');
   const dot = document.getElementById('sync-dot');
   el.textContent = msg;
   el.className = state ? 'ok' === state ? 'ok' : state : '';
   dot.className = 'sync-dot' + (state ? ' ' + state : '');
+  const log = document.getElementById('drive-error-log');
+  if (state === 'err' && log) {
+    log.style.display = 'block';
+    const ts = new Date().toLocaleTimeString('es-ES');
+    log.textContent += '[' + ts + '] ' + msg + (detail ? ': ' + detail : '') + '\n';
+  } else if (state === 'ok' && log) {
+    log.style.display = 'none';
+    log.textContent = '';
+  }
 }
 
 // ── Find or create file in Drive ────────────────────────────
@@ -1327,7 +1341,7 @@ async function driveLoadOrCreate() {
       setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Drive conectado');
     }
   } catch(e) {
-    setDriveStatus('err', 'Error al conectar');
+    setDriveStatus('err', 'Error al conectar', e.message || String(e));
     console.error('Drive error:', e);
   }
 }
@@ -1372,7 +1386,7 @@ async function drivePullAndMerge() {
     await drivePush(merged);
     setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Sincronizado');
   } catch(e) {
-    setDriveStatus('err', 'Error al sincronizar');
+    setDriveStatus('err', 'Error al sincronizar', e.message || String(e));
     console.error('Pull error:', e);
   }
 }
@@ -1409,29 +1423,30 @@ function saveData(d) {
 }
 
 // ── Restore session on load if token persisted ──────────────
-window.addEventListener('load', () => {
-  // Try silent token refresh after gsi loads
-  setTimeout(() => {
-    try {
-      if (typeof google !== 'undefined' && google.accounts) {
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: DRIVE_CLIENT_ID,
-          scope: DRIVE_SCOPE,
-          prompt: '',
-          callback: async (resp) => {
-            if (resp && !resp.error) {
-              driveAccessToken = resp.access_token;
-              showDriveConnected();
-              setDriveStatus('syncing', 'Reconectando…');
-              await driveLoadOrCreate();
-            }
-          }
-        });
-        client.requestAccessToken({ prompt: '' });
+// Silent re-auth on load - only if GSI is ready
+function trySilentAuth() {
+  try {
+    if (typeof google === 'undefined' || !google.accounts) {
+      setTimeout(trySilentAuth, 500);
+      return;
+    }
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      prompt: '',
+      callback: async (resp) => {
+        if (resp && !resp.error) {
+          driveAccessToken = resp.access_token;
+          showDriveConnected();
+          setDriveStatus('syncing', 'Reconectando…');
+          await driveLoadOrCreate();
+        }
       }
-    } catch(e) {}
-  }, 2000);
-});
+    });
+    client.requestAccessToken({ prompt: '' });
+  } catch(e) {}
+}
+window.addEventListener('load', () => setTimeout(trySilentAuth, 1000));
 
 // ═══════════════════════════════════════════════════════════
 // INIT

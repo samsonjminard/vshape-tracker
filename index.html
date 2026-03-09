@@ -379,7 +379,7 @@ function hex2rgb(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 function loadData() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}"); } catch { return {}; } }
-function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} scheduleDriveSync(d); }
 function todayStr() { return new Date().toISOString().split("T")[0]; }
 function dataKey(dayKey, blockId, exId, date) { return `${date||todayStr()}_${dayKey}_${blockId}_${exId}`; }
 function getExData(dayKey, blockId, exId, numSets) {
@@ -1409,9 +1409,7 @@ async function drivePush(data) {
 }
 
 // ── Auto-sync: debounced push after any data change ─────────
-const _origSaveData = saveData;
-function saveData(d) {
-  _origSaveData(d);
+function scheduleDriveSync(d) {
   if (driveAccessToken && driveFileId) {
     clearTimeout(driveSyncTimeout);
     setDriveStatus('syncing', 'Guardando…');

@@ -876,7 +876,7 @@ function showView(view) {
     }
   });
   if (view === 'progreso') renderProgreso();
-  if (view === 'plan') renderPlanEditor();
+  if (view === 'plan') { planDraft = null; renderPlanEditor(); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1443,7 +1443,7 @@ document.getElementById("btn-clear").addEventListener("click", () => {
 // PLAN EDITOR
 // ═══════════════════════════════════════════════════════════
 function renderPlanEditor() {
-  planDraft = JSON.parse(JSON.stringify(PLAN));
+  if (!planDraft) planDraft = JSON.parse(JSON.stringify(PLAN));
   const color = PLAN[activeDay].color;
   let html = '';
 
@@ -1582,7 +1582,7 @@ function resetPlanToDefault() {
       PLAN = JSON.parse(JSON.stringify(DEFAULT_PLAN));
       DAY_ORDER = Object.keys(PLAN);
       try { localStorage.removeItem(PLAN_KEY); } catch {}
-      planDraft = JSON.parse(JSON.stringify(PLAN));
+      planDraft = null;
       renderPlanEditor();
       renderDay();
       showToast('Plan restaurado', '#4ade80');

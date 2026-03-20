@@ -585,7 +585,7 @@ function formatDate(dateStr) {
 // ═══════════════════════════════════════════════════════════
 function renderSessionBreakdown(history, color, isBodyweight) {
   if (history.length === 0) return '';
-  const recent = [...history].reverse().slice(0, 5);
+  const recent = [...history].reverse().slice(0, 1);
   let html = `<div class="session-breakdown"><div class="sess-breakdown-title">Detalle por sesión</div>`;
   recent.forEach(h => {
     html += `<div class="sess-row"><span class="sess-date">${formatDate(h.date)}</span><div class="sess-chips">`;
@@ -681,47 +681,90 @@ function drawChart(canvas, history, color, isBodyweight) {
   });
 }
 
-function drawTimeChart(canvas, history, color) {
+// series = [{ history: [{date, durationSecs}], color, label }]
+function drawMultiTimeChart(canvas, series) {
   const dpr = window.devicePixelRatio || 1;
-  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight || 160;
   canvas.width = W * dpr; canvas.height = H * dpr;
   const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+
+  // Build sorted list of all unique dates across all series
+  const dateSet = new Set();
+  series.forEach(s => s.history.forEach(h => dateSet.add(h.date)));
+  const allDates = [...dateSet].sort();
+  if (allDates.length === 0) return;
+
   const pad = { top: 18, right: 16, bottom: 32, left: 46 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
-  const vals = history.map(h => h.durationSecs);
-  const minV = Math.max(0, Math.min(...vals)*0.85), maxV = Math.max(...vals)*1.1, range = maxV - minV || 1;
-  const xOf = i => pad.left + (i / (history.length-1||1)) * cw;
-  const yOf = v => pad.top + ch - ((v-minV)/range)*ch;
 
+  // Global Y range across all series
+  let allVals = [];
+  series.forEach(s => s.history.forEach(h => allVals.push(h.durationSecs)));
+  const minV = Math.max(0, Math.min(...allVals) * 0.85);
+  const maxV = Math.max(...allVals) * 1.1;
+  const range = maxV - minV || 1;
+
+  const xOf = dateStr => pad.left + (allDates.indexOf(dateStr) / (allDates.length - 1 || 1)) * cw;
+  const yOf = v => pad.top + ch - ((v - minV) / range) * ch;
+
+  // Grid lines + Y labels
   ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
   for (let i = 0; i <= 3; i++) {
-    const y = pad.top + (ch/3)*i;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+cw, y); ctx.stroke();
-    const gv = maxV - (range/3)*i, gm = Math.floor(gv/60), gs = Math.floor(gv%60);
-    ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.font = "600 9px 'JetBrains Mono', monospace";
-    ctx.textAlign = 'right'; ctx.fillText(gm+':'+String(gs).padStart(2,'0'), pad.left-5, y+4);
+    const y = pad.top + (ch / 3) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const gv = maxV - (range / 3) * i, gm = Math.floor(gv / 60), gs = Math.floor(gv % 60);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.font = "600 9px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'right';
+    ctx.fillText(gm + ':' + String(gs).padStart(2,'0'), pad.left - 5, y + 4);
   }
-  if (history.length < 2) {
-    const x=xOf(0),y=yOf(vals[0]); ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=color; ctx.fill(); return;
-  }
-  const grad = ctx.createLinearGradient(0,pad.top,0,pad.top+ch);
-  grad.addColorStop(0,hex2rgb(color,0.22)); grad.addColorStop(1,hex2rgb(color,0.0));
-  ctx.beginPath(); ctx.moveTo(xOf(0),yOf(vals[0]));
-  for (let i=1;i<history.length;i++){const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);}
-  ctx.lineTo(xOf(history.length-1),pad.top+ch);ctx.lineTo(xOf(0),pad.top+ch);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-  ctx.beginPath();ctx.moveTo(xOf(0),yOf(vals[0]));
-  for (let i=1;i<history.length;i++){const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);}
-  ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
-  history.forEach((h,i)=>{
-    const x=xOf(i),y=yOf(vals[i]);
-    ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fillStyle=hex2rgb(color,0.2);ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='#0C0C0F';ctx.fill();
-    const m=Math.floor(vals[i]/60),s=vals[i]%60;
-    ctx.fillStyle='#fff';ctx.font="700 9px 'JetBrains Mono', monospace";ctx.textAlign='center';
-    ctx.fillText(m+':'+String(s).padStart(2,'0'),x,y-11);
-    ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font="600 9px 'Barlow', sans-serif";
-    ctx.fillText(formatDate(h.date),x,H-6);
+
+  // X axis date labels (show up to 5 evenly spaced)
+  const labelStep = Math.max(1, Math.floor(allDates.length / 5));
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = "600 9px 'Barlow', sans-serif"; ctx.textAlign = 'center';
+  allDates.forEach((d, i) => {
+    if (i % labelStep === 0 || i === allDates.length - 1) {
+      ctx.fillText(formatDate(d), xOf(d), H - 6);
+    }
+  });
+
+  // Draw each series
+  series.forEach(({ history, color }) => {
+    if (history.length === 0) return;
+    const pts = history.map(h => ({ x: xOf(h.date), y: yOf(h.durationSecs), val: h.durationSecs }));
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+    grad.addColorStop(0, hex2rgb(color, 0.12)); grad.addColorStop(1, hex2rgb(color, 0.0));
+    if (pts.length >= 2) {
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const cpx = (pts[i-1].x + pts[i].x) / 2;
+        ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      }
+      ctx.lineTo(pts[pts.length-1].x, pad.top + ch); ctx.lineTo(pts[0].x, pad.top + ch);
+      ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+
+      // Line
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const cpx = (pts[i-1].x + pts[i].x) / 2;
+        ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+
+    // Dots + value labels (only last point to keep it clean)
+    pts.forEach((p, i) => {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fillStyle = hex2rgb(color, 0.2); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctx.fillStyle = '#0C0C0F'; ctx.fill();
+      // Show value label only on last point
+      if (i === pts.length - 1) {
+        const m = Math.floor(p.val / 60), s = p.val % 60;
+        ctx.fillStyle = color; ctx.font = "700 9px 'JetBrains Mono', monospace"; ctx.textAlign = 'center';
+        ctx.fillText(m + ':' + String(s).padStart(2,'0'), p.x, p.y - 10);
+      }
+    });
   });
 }
 
@@ -886,36 +929,40 @@ function renderProgreso() {
   const container = document.getElementById("progreso-view");
   let anyData = false, html = "";
 
-  // Session durations
-  let sessHtml = "";
-  DAY_ORDER.forEach(dayKey => {
-    const day = PLAN[dayKey], color = day.color;
-    const sessHistory = getSessionHistory(dayKey);
-    if (!sessHistory.length) return;
+  // Session durations — single combined chart
+  const allSessData = DAY_ORDER.map(dayKey => ({
+    dayKey,
+    color: PLAN[dayKey].color,
+    label: PLAN[dayKey].label,
+    sub: PLAN[dayKey].sub,
+    history: getSessionHistory(dayKey)
+  })).filter(s => s.history.length > 0);
+
+  if (allSessData.length > 0) {
     anyData = true;
-    const best = Math.min(...sessHistory.map(h=>h.durationSecs));
-    const last = sessHistory[sessHistory.length-1].durationSecs;
-    const bm = Math.floor(best/60), bs = best%60, lm = Math.floor(last/60), ls = last%60;
-    const canvasId = 'sess-chart-' + dayKey.replace(/ /g,'_');
-    sessHtml += `
-      <div class="prog-session-card" style="border-color:${hex2rgb(color,0.15)}">
-        <div class="prog-session-title">
-          <div class="prog-day-dot" style="background:${color}"></div>
-          <span style="color:${color}">${day.label}</span>
-          <span style="color:rgba(255,255,255,0.25);font-size:11px;font-weight:400">${day.sub}</span>
-          <div style="margin-left:auto;font-size:11px;font-family:'JetBrains Mono',monospace;color:${color};background:${hex2rgb(color,0.1)};border:1px solid ${hex2rgb(color,0.3)};padding:3px 8px;border-radius:8px">
-            mejor ${bm}:${String(bs).padStart(2,'0')}
-          </div>
-        </div>
-        <canvas id="${canvasId}" class="prog-chart-time"></canvas>
-        <div class="prog-stats-row" style="margin-top:10px">
-          <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${sessHistory.length}</div><div class="prog-stat-lbl">Sesiones</div></div>
-          <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${lm}:${String(ls).padStart(2,'0')}</div><div class="prog-stat-lbl">Última</div></div>
-          <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${bm}:${String(bs).padStart(2,'0')}</div><div class="prog-stat-lbl">Mejor</div></div>
-        </div>
+    // Legend pills
+    const legendHtml = allSessData.map(s => `
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:${s.color};background:${hex2rgb(s.color,0.1)};border:1px solid ${hex2rgb(s.color,0.25)};border-radius:100px;padding:3px 9px;white-space:nowrap">
+        <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.label}
+      </span>`).join('');
+    // Stats row: total sessions per day
+    const statsHtml = allSessData.map(s => {
+      const best = Math.min(...s.history.map(h=>h.durationSecs));
+      const bm = Math.floor(best/60), bs = best%60;
+      return `<div class="prog-stat">
+        <div class="prog-stat-val" style="color:${s.color}">${bm}:${String(bs).padStart(2,'0')}</div>
+        <div class="prog-stat-lbl">${s.label} mejor</div>
       </div>`;
-  });
-  if (sessHtml) html += `<div style="margin-bottom:8px;padding:16px 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>` + sessHtml;
+    }).join('');
+
+    html += `
+      <div style="margin-bottom:8px;padding:16px 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>
+      <div class="prog-session-card">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${legendHtml}</div>
+        <canvas id="sess-chart-combined" class="prog-chart-time" style="height:160px"></canvas>
+        <div class="prog-stats-row" style="margin-top:10px">${statsHtml}</div>
+      </div>`;
+  }
 
   // Exercise progress per day
   DAY_ORDER.forEach(dayKey => {
@@ -998,6 +1045,12 @@ function renderProgreso() {
 
   if (anyData) {
     requestAnimationFrame(() => {
+      // Combined session duration chart
+      const combinedCanvas = document.getElementById('sess-chart-combined');
+      if (combinedCanvas && allSessData.length > 0) {
+        drawMultiTimeChart(combinedCanvas, allSessData);
+      }
+      // Exercise load charts
       DAY_ORDER.forEach(dayKey => {
         const day = PLAN[dayKey];
         day.blocks.forEach(block => {
@@ -1009,11 +1062,6 @@ function renderProgreso() {
             if (canvas) drawChart(canvas, history, day.color, history.every(h => h.isBodyweight));
           });
         });
-        const sessH = getSessionHistory(dayKey);
-        if (sessH.length) {
-          const c = document.getElementById('sess-chart-' + dayKey.replace(/ /g,'_'));
-          if (c) drawTimeChart(c, sessH, PLAN[dayKey].color);
-        }
       });
     });
   }

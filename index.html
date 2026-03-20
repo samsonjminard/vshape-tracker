@@ -860,7 +860,7 @@ function showView(view) {
   currentView = view;
   const views = { entreno: 'entreno-view', progreso: 'progreso-view', plan: 'plan-view' };
   Object.entries(views).forEach(([k,id]) => {
-    document.getElementById(id).style.display = k === view ? '' : 'none';
+    document.getElementById(id).style.display = k === view ? 'block' : 'none';
   });
   const color = PLAN[activeDay].color;
   ['entreno','progreso','plan'].forEach(v => {

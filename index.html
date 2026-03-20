@@ -2,9 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0C0C0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="V-Shape">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230C0C0F'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E🏋️%3C/text%3E%3C/svg%3E">
 <title>V-Shape Program</title>
-<script src="https://accounts.google.com/gsi/client"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,8 +19,9 @@
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
   input[type=number] { -moz-appearance: textfield; }
   ::-webkit-scrollbar { width: 0; }
-  button { font-family: 'Barlow', system-ui, sans-serif; cursor: pointer; }
+  button { font-family: 'Barlow', system-ui, sans-serif; cursor: pointer; border: none; }
   textarea { font-family: 'Barlow', system-ui, sans-serif; }
+  input { font-family: 'Barlow', system-ui, sans-serif; }
 
   #bg-glow {
     position: fixed; top: 0; left: 50%; transform: translateX(-50%);
@@ -26,13 +32,14 @@
 
   /* ── MAIN NAV ─────────────────────────────────────────── */
   #main-nav {
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
     gap: 6px; padding: 20px 20px 0;
   }
   .main-nav-btn {
-    border-radius: 14px; padding: 12px 6px; border-width: 1.5px; border-style: solid;
-    font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-    transition: all 0.2s;
+    border-radius: 14px; padding: 11px 4px; border-width: 1.5px; border-style: solid;
+    font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+    transition: all 0.2s; background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4);
   }
 
   /* ── HEADER ───────────────────────────────────────────── */
@@ -100,54 +107,17 @@
   /* ── TIMER ────────────────────────────────────────────── */
   .timer-wrap { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(255,255,255,0.04); border-radius: 14px; margin: 10px 0; border-width: 1px; border-style: solid; }
   .timer-svg { flex-shrink: 0; transform: rotate(-90deg); }
-  .timer-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 2px; letter-spacing: 1px; }
-  .timer-val { font-size: 16px; font-weight: 700; color: #fff; }
+  .timer-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 2px; letter-spacing: 1px; text-transform: uppercase; }
+  .timer-val { font-size: 16px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
   .timer-status { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
   .btn-skip { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #fff; padding: 10px 12px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-
-  /* ── PROGRESO VIEW ────────────────────────────────────── */
-  #progreso-view { padding: 0 20px; display: none; }
-  .prog-day-section { margin-bottom: 32px; }
-  .prog-day-title {
-    font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-  }
-  .prog-day-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .prog-ex-card {
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px; padding: 16px; margin-bottom: 12px; overflow: hidden;
-  }
-  .prog-ex-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .prog-ex-name { font-size: 14px; font-weight: 700; flex: 1; }
-  .prog-ex-best {
-    font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-    padding: 4px 8px; border-radius: 8px; border-width: 1px; border-style: solid;
-  }
-  .prog-canvas-wrap { position: relative; width: 100%; }
-  canvas.prog-chart { width: 100%; height: 130px; display: block; }
-  .prog-empty {
-    text-align: center; padding: 28px 0; font-size: 13px; color: rgba(255,255,255,0.25);
-    font-style: italic;
-  }
-  .prog-stats-row { display: flex; gap: 8px; margin-top: 12px; }
-  .prog-stat {
-    flex: 1; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 8px; text-align: center;
-  }
-  .prog-stat-val { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
-  .prog-stat-lbl { font-size: 9px; color: rgba(255,255,255,0.3); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
-  .prog-no-data { text-align: center; padding: 60px 20px; }
-  .prog-no-data-icon { font-size: 40px; margin-bottom: 12px; }
-  .prog-no-data-txt { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
-  .prog-no-data-sub { font-size: 13px; color: rgba(255,255,255,0.25); }
-
 
   /* ── ROUTINE TIMER ────────────────────────────────────── */
   #routine-timer-bar {
     display: none; align-items: center; gap: 12px;
     background: rgba(255,255,255,0.04); border-radius: 16px;
     padding: 14px 18px; margin: 14px 20px 0;
-    border-width: 1px; border-style: solid;
-    transition: border-color 0.3s;
+    border-width: 1px; border-style: solid; transition: border-color 0.3s;
   }
   #routine-timer-bar.active { display: flex; }
   #rt-icon { font-size: 20px; flex-shrink: 0; }
@@ -155,54 +125,53 @@
   #rt-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 2px; }
   #rt-time { font-size: 28px; font-weight: 900; font-family: 'JetBrains Mono', monospace; line-height: 1; }
   #rt-status { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
-  #btn-rt-toggle {
-    border: none; border-radius: 14px; padding: 12px 18px;
-    font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
-    transition: all 0.2s; flex-shrink: 0;
-  }
+  #btn-rt-toggle { border: none; border-radius: 14px; padding: 12px 18px; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s; flex-shrink: 0; }
 
-  /* ── SESSION TIME CHART (in progreso) ─────────────────── */
-  .prog-session-card {
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px; padding: 16px; margin-bottom: 24px; overflow: hidden;
-  }
-  .prog-session-title {
-    font-size: 13px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 14px;
-    display: flex; align-items: center; gap: 8px;
-  }
+  /* ── PROGRESO VIEW ────────────────────────────────────── */
+  #progreso-view { padding: 0 20px; display: none; }
+  .prog-day-section { margin-bottom: 32px; }
+  .prog-day-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .prog-day-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .prog-ex-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; margin-bottom: 12px; overflow: hidden; }
+  .prog-ex-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .prog-ex-name { font-size: 14px; font-weight: 700; flex: 1; }
+  .prog-ex-best { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 4px 8px; border-radius: 8px; border-width: 1px; border-style: solid; }
+  .prog-canvas-wrap { position: relative; width: 100%; }
+  canvas.prog-chart { width: 100%; height: 140px; display: block; }
+  .prog-stats-row { display: flex; gap: 8px; margin-top: 12px; }
+  .prog-stat { flex: 1; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .prog-stat-val { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .prog-stat-lbl { font-size: 9px; color: rgba(255,255,255,0.3); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+  .prog-no-data { text-align: center; padding: 60px 20px; }
+  .prog-no-data-icon { font-size: 40px; margin-bottom: 12px; }
+  .prog-no-data-txt { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+  .prog-no-data-sub { font-size: 13px; color: rgba(255,255,255,0.25); }
+
+  /* ── SESSION BREAKDOWN ────────────────────────────────── */
+  .session-breakdown { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .sess-breakdown-title { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 8px; }
+  .sess-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; }
+  .sess-date { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.3); font-family: 'JetBrains Mono', monospace; flex-shrink: 0; padding-top: 3px; min-width: 52px; }
+  .sess-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .set-chip { font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); }
+  .set-chip-bw { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+
+  /* ── SESSION DURATION CHART ───────────────────────────── */
+  .prog-session-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; margin-bottom: 24px; overflow: hidden; }
+  .prog-session-title { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
   canvas.prog-chart-time { width: 100%; height: 130px; display: block; }
 
-
   /* ── DRIVE SYNC ───────────────────────────────────────── */
-  #drive-bar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 20px; background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  #drive-status {
-    flex: 1; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35);
-    letter-spacing: 0.5px;
-  }
+  #drive-bar { display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; }
+  #drive-status { flex: 1; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; }
   #drive-status.ok { color: #4ade80; }
   #drive-status.err { color: #f87171; }
   #drive-status.syncing { color: #facc15; }
-  #btn-drive-login {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(66,133,244,0.15); border: 1px solid rgba(66,133,244,0.4);
-    border-radius: 10px; color: #7ab3ff; padding: 7px 12px;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer;
-    transition: all 0.2s;
-  }
+  #drive-error-log { display: none; width: 100%; padding: 8px; background: rgba(248,113,113,0.08); border-top: 1px solid rgba(248,113,113,0.2); font-size: 11px; font-family: monospace; color: #f87171; word-break: break-all; max-height: 100px; overflow-y: auto; white-space: pre-wrap; }
+  #btn-drive-login { display: flex; align-items: center; gap: 6px; background: rgba(66,133,244,0.15); border: 1px solid rgba(66,133,244,0.4); border-radius: 10px; color: #7ab3ff; padding: 7px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; }
   #btn-drive-login:hover { background: rgba(66,133,244,0.25); }
-  #btn-drive-logout {
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px; color: rgba(255,255,255,0.3); padding: 7px 10px;
-    font-size: 10px; font-weight: 600; cursor: pointer;
-  }
-  .sync-dot {
-    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-    background: rgba(255,255,255,0.2);
-  }
+  #btn-drive-logout { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: rgba(255,255,255,0.3); padding: 7px 10px; font-size: 10px; font-weight: 600; cursor: pointer; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: rgba(255,255,255,0.2); }
   .sync-dot.ok { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
   .sync-dot.syncing { background: #facc15; animation: pulse 1s infinite; }
   .sync-dot.err { background: #f87171; }
@@ -217,7 +186,67 @@
     padding: 10px 20px 22px;
     display: flex; justify-content: center; align-items: center;
   }
-  #bottom-bar-inner { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.25); font-size: 12px; }
+  #bottom-bar-inner { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.25); font-size: 12px; cursor: pointer; border-radius: 8px; padding: 4px 8px; transition: background 0.2s; }
+  #bottom-bar-inner:hover { background: rgba(255,255,255,0.06); }
+  #bottom-bar-inner:active { background: rgba(255,255,255,0.1); }
+
+  /* ── MODAL ────────────────────────────────────────────── */
+  #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 200; backdrop-filter: blur(4px); }
+  #modal-sheet {
+    display: none; position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; background: #1a1a22; border-radius: 24px 24px 0 0;
+    z-index: 201; padding: 24px 24px 44px; max-height: 85vh; overflow-y: auto;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 100px; margin: 0 auto 24px; }
+  .modal-title { font-size: 20px; font-weight: 900; margin-bottom: 20px; }
+  .profile-field { margin-bottom: 14px; }
+  .profile-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 6px; }
+  .profile-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: #fff; font-size: 15px; padding: 12px 14px; outline: none; font-family: 'Barlow', sans-serif; }
+  .profile-input:focus { border-color: rgba(255,255,255,0.25); }
+  .modal-btn-primary { width: 100%; border: none; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; margin-top: 8px; }
+  .modal-btn-secondary { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 13px; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.6); cursor: pointer; margin-top: 8px; }
+
+  /* ── PLAN EDITOR ──────────────────────────────────────── */
+  #plan-view { display: none; padding: 0 20px 20px; }
+  .plan-header { padding: 16px 0 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .plan-title-sub { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .plan-title { font-size: 26px; font-weight: 900; }
+  .plan-reset-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: rgba(255,255,255,0.4); padding: 8px 12px; font-size: 11px; font-weight: 700; }
+  .plan-day-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; margin-bottom: 16px; overflow: hidden; }
+  .plan-day-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; }
+  .plan-day-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .plan-day-title { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; flex: 1; }
+  .plan-day-sub { font-size: 11px; color: rgba(255,255,255,0.3); }
+  .plan-day-chevron { font-size: 12px; color: rgba(255,255,255,0.3); transition: transform 0.2s; }
+  .plan-day-body { padding: 0 16px 14px; }
+  .plan-block-editor { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .plan-block-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .plan-block-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); flex: 1; }
+  .plan-control-group { display: flex; align-items: center; gap: 6px; }
+  .plan-control-label { font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 600; }
+  .plan-num-input { width: 60px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; text-align: center; padding: 6px 4px; outline: none; font-family: 'JetBrains Mono', monospace; }
+  .plan-ss-toggle { position: relative; width: 38px; height: 22px; cursor: pointer; }
+  .plan-ss-toggle input { opacity: 0; width: 0; height: 0; }
+  .plan-ss-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 100px; transition: 0.3s; }
+  .plan-ss-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: rgba(255,255,255,0.5); border-radius: 50%; transition: 0.3s; }
+  .plan-ss-toggle input:checked + .plan-ss-slider { background: rgba(255,165,0,0.5); }
+  .plan-ss-toggle input:checked + .plan-ss-slider:before { transform: translateX(16px); background: #FFB300; }
+  .plan-ex-row { display: grid; grid-template-columns: 1fr 44px 1fr 32px; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .plan-ex-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 12px; font-weight: 600; padding: 8px 10px; outline: none; width: 100%; }
+  .plan-ex-input:focus { border-color: rgba(255,255,255,0.25); }
+  .plan-ex-remove { width: 32px; height: 32px; background: rgba(255,71,71,0.1); border: 1px solid rgba(255,71,71,0.2); border-radius: 8px; color: rgba(255,110,110,0.7); display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; flex-shrink: 0; }
+  .plan-add-ex-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; color: rgba(255,255,255,0.4); padding: 8px 12px; font-size: 12px; font-weight: 600; width: 100%; justify-content: center; margin-top: 4px; cursor: pointer; }
+  .plan-save-btn { width: 100%; border: none; border-radius: 16px; padding: 16px; font-size: 15px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; margin-top: 4px; }
+  .plan-col-headers { display: grid; grid-template-columns: 1fr 44px 1fr 32px; gap: 6px; padding: 0 0 4px; }
+  .plan-col-hdr { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.2); letter-spacing: 1px; text-transform: uppercase; text-align: center; }
+
+  /* ── SWIPE INDICATOR ──────────────────────────────────── */
+  @keyframes fadeSlideIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+  .fade-in { animation: fadeSlideIn 0.25s ease; }
+
+  /* ── MISC ─────────────────────────────────────────────── */
+  .section-sep { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0 20px; }
 </style>
 </head>
 <body>
@@ -231,12 +260,13 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Conectar Drive
     </button>
-    <div id="drive-error-log" style="display:none;padding:8px 20px;background:rgba(248,113,113,0.08);border-bottom:1px solid rgba(248,113,113,0.2);font-size:11px;font-family:monospace;color:#f87171;word-break:break-all;max-height:120px;overflow-y:auto;white-space:pre-wrap"></div>
-</div>
-  <!-- MAIN NAV -->
+    <div id="drive-error-log"></div>
+  </div>
+
   <div id="main-nav">
-    <button id="nav-entreno" class="main-nav-btn" onclick="showView('entreno')">🏋️ Entrenamiento</button>
+    <button id="nav-entreno" class="main-nav-btn" onclick="showView('entreno')">🏋️ Entreno</button>
     <button id="nav-progreso" class="main-nav-btn" onclick="showView('progreso')">📈 Progreso</button>
+    <button id="nav-plan" class="main-nav-btn" onclick="showView('plan')">✏️ Plan</button>
   </div>
 
   <!-- ENTRENAMIENTO VIEW -->
@@ -250,7 +280,7 @@
         </div>
         <div>
           <div id="today-str"></div>
-          <button id="btn-start-routine" onclick="startRoutine()" style="display:flex;align-items:center;gap:6px;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:6px;">
+          <button id="btn-start-routine" onclick="startRoutine()" style="display:flex;align-items:center;gap:6px;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;margin-bottom:6px;">
             ▶ Iniciar
           </button>
           <button id="btn-clear">
@@ -284,23 +314,88 @@
 
   <!-- PROGRESO VIEW -->
   <div id="progreso-view"></div>
+
+  <!-- PLAN EDITOR VIEW -->
+  <div id="plan-view">
+    <div class="plan-header">
+      <div>
+        <div class="plan-title-sub">Editor</div>
+        <div class="plan-title">Plan de Entrenamiento</div>
+      </div>
+      <button class="plan-reset-btn" onclick="resetPlanToDefault()">↺ Restaurar</button>
+    </div>
+    <div id="plan-editor-content"></div>
+    <button class="plan-save-btn" id="plan-save-btn" onclick="savePlanFromEditor()">Guardar Plan</button>
+  </div>
 </div>
 
 <div id="bottom-bar">
-  <div id="bottom-bar-inner">
+  <div id="bottom-bar-inner" onclick="openProfileModal()" aria-label="Editar perfil" role="button" tabindex="0">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 9a6 6 0 0 0 12 0"/>
       <line x1="12" y1="15" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>
     </svg>
-    51 años · 89 kg · Objetivo V-Shape
+    <span id="profile-display">51 años · 89 kg · Objetivo V-Shape</span>
   </div>
 </div>
 
+<!-- MODAL SYSTEM -->
+<div id="modal-overlay" onclick="closeModal()"></div>
+<div id="modal-sheet" role="dialog" aria-modal="true"></div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
-// DATA
+// AUDIO
 // ═══════════════════════════════════════════════════════════
-const PLAN = {
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+document.addEventListener('touchstart', () => { try { getAudioCtx().resume(); } catch(e){} }, { once: true, passive: true });
+document.addEventListener('click', () => { try { getAudioCtx().resume(); } catch(e){} }, { once: true });
+
+function playBeep(times = 3) {
+  try {
+    const ctx = getAudioCtx();
+    ctx.resume();
+    for (let i = 0; i < times; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = i === 0 ? 660 : i === 1 ? 880 : 1100;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.22;
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      osc.start(t); osc.stop(t + 0.18);
+    }
+  } catch(e) {}
+}
+
+function playCheckSound() {
+  try {
+    const ctx = getAudioCtx();
+    ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 660;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS & DATA
+// ═══════════════════════════════════════════════════════════
+const STORAGE_KEY = "vshape_html_v1";
+const PLAN_KEY    = "vshape_plan_v2";
+const PROFILE_KEY = "vshape_profile_v1";
+
+const DEFAULT_PLAN = {
   "Torso A": {
     label: "TORSO A", sub: "Estructura · Lunes", color: "#00E5FF",
     blocks: [
@@ -368,8 +463,44 @@ const PLAN = {
     ],
   },
 };
-const DAY_ORDER = ["Torso A", "Pierna A", "Torso B", "Pierna B"];
-const STORAGE_KEY = "vshape_html_v1";
+
+// ─── Plan storage ────────────────────────────────────────────
+function loadPlan() {
+  try {
+    const s = localStorage.getItem(PLAN_KEY);
+    if (s) { const p = JSON.parse(s); if (p && typeof p === 'object' && Object.keys(p).length > 0) return p; }
+  } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_PLAN));
+}
+function savePlan(plan) {
+  try { localStorage.setItem(PLAN_KEY, JSON.stringify(plan)); } catch {}
+}
+
+let PLAN = loadPlan();
+let DAY_ORDER = Object.keys(PLAN);
+let planDraft = null;
+
+// ─── Profile storage ─────────────────────────────────────────
+const DEFAULT_PROFILE = { name: '', age: 51, weight: 89, goal: 'Objetivo V-Shape' };
+function loadProfile() {
+  try {
+    const s = localStorage.getItem(PROFILE_KEY);
+    if (s) return { ...DEFAULT_PROFILE, ...JSON.parse(s) };
+  } catch {}
+  return { ...DEFAULT_PROFILE };
+}
+function saveProfile(p) {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch {}
+}
+function renderBottomBar() {
+  const p = loadProfile();
+  const parts = [];
+  if (p.name) parts.push(p.name);
+  if (p.age) parts.push(`${p.age} años`);
+  if (p.weight) parts.push(`${p.weight} kg`);
+  if (p.goal) parts.push(p.goal);
+  document.getElementById('profile-display').textContent = parts.join(' · ') || 'Toca para configurar perfil';
+}
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
@@ -388,33 +519,57 @@ function getExData(dayKey, blockId, exId, numSets) {
   return d[k] || { sets: Array.from({length:numSets},()=>({weight:"",reps:""})), completed: Array(numSets).fill(false), notes: "" };
 }
 function setExData(dayKey, blockId, exId, data) {
+  data.lastModified = Date.now();
   const d = loadData();
   d[dataKey(dayKey, blockId, exId)] = data;
   saveData(d);
 }
 
 // ═══════════════════════════════════════════════════════════
-// PROGRESS DATA EXTRACTION
+// HISTORY (ENHANCED WITH PER-SET DETAIL)
 // ═══════════════════════════════════════════════════════════
-// Returns array of { date, maxWeight, avgWeight, totalVol, sessions } sorted asc
 function getExerciseHistory(dayKey, blockId, exId) {
   const all = loadData();
-  const prefix = `_${dayKey}_${blockId}_${exId}`;
+  const suffix = `_${dayKey}_${blockId}_${exId}`;
   const history = [];
   Object.entries(all).forEach(([key, val]) => {
-    if (!key.endsWith(prefix)) return;
-    const date = key.replace(prefix, "");
+    if (!key.endsWith(suffix)) return;
+    const date = key.slice(0, key.length - suffix.length);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
     if (!val.completed || !val.sets) return;
-    const weights = val.sets
-      .map((s,i) => val.completed[i] ? parseFloat(s.weight) : null)
-      .filter(w => w !== null && !isNaN(w) && w > 0);
-    if (weights.length === 0) return;
-    const maxW = Math.max(...weights);
-    const avgW = weights.reduce((a,b)=>a+b,0)/weights.length;
-    const reps = val.sets.map((s,i) => val.completed[i] ? parseFloat(s.reps)||0 : 0);
-    const vol = weights.reduce((sum,w,i) => sum + w*(reps[i]||0), 0);
-    history.push({ date, maxWeight: maxW, avgWeight: parseFloat(avgW.toFixed(1)), totalVol: parseFloat(vol.toFixed(0)) });
+
+    const completedSets = val.sets
+      .map((s, i) => val.completed[i] ? { weight: parseFloat(s.weight)||0, reps: parseFloat(s.reps)||0 } : null)
+      .filter(Boolean);
+
+    if (completedSets.length === 0) return;
+
+    const weights = completedSets.map(s => s.weight).filter(w => w > 0);
+    const isBodyweight = weights.length === 0;
+
+    const totalReps = completedSets.reduce((s, x) => s + x.reps, 0);
+    const maxReps = Math.max(0, ...completedSets.map(s => s.reps));
+
+    if (isBodyweight) {
+      history.push({ date, isBodyweight: true, totalReps, maxReps, sets: completedSets, maxWeight: 0, avgWeight: 0, totalVol: 0 });
+    } else {
+      const maxW = Math.max(...weights);
+      const avgW = weights.reduce((a,b)=>a+b,0) / weights.length;
+      const totalVol = completedSets.reduce((s, x) => s + (x.weight||0) * x.reps, 0);
+      history.push({ date, isBodyweight: false, maxWeight: maxW, avgWeight: parseFloat(avgW.toFixed(1)), totalVol: parseFloat(totalVol.toFixed(0)), totalReps, maxReps, sets: completedSets });
+    }
+  });
+  history.sort((a,b) => a.date.localeCompare(b.date));
+  return history;
+}
+
+function getSessionHistory(dayKey) {
+  const all = loadData();
+  const prefix = 'session_' + dayKey.replace(/ /g,'_') + '_';
+  const history = [];
+  Object.entries(all).forEach(([key, val]) => {
+    if (!key.startsWith(prefix)) return;
+    if (val.durationSecs && val.date) history.push({ date: val.date, durationSecs: val.durationSecs });
   });
   history.sort((a,b) => a.date.localeCompare(b.date));
   return history;
@@ -426,164 +581,323 @@ function formatDate(dateStr) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SESSION BREAKDOWN HTML
+// ═══════════════════════════════════════════════════════════
+function renderSessionBreakdown(history, color, isBodyweight) {
+  if (history.length === 0) return '';
+  const recent = [...history].reverse().slice(0, 5);
+  let html = `<div class="session-breakdown"><div class="sess-breakdown-title">Detalle por sesión</div>`;
+  recent.forEach(h => {
+    html += `<div class="sess-row"><span class="sess-date">${formatDate(h.date)}</span><div class="sess-chips">`;
+    if (isBodyweight) {
+      h.sets.forEach(s => {
+        html += `<span class="set-chip set-chip-bw">${s.reps||'?'}r</span>`;
+      });
+    } else {
+      h.sets.forEach(s => {
+        const wStr = s.weight > 0 ? `${s.weight}` : 'BW';
+        const rStr = s.reps > 0 ? `×${s.reps}` : '';
+        html += `<span class="set-chip">${wStr}${rStr}</span>`;
+      });
+    }
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════
 // CHART DRAWING
 // ═══════════════════════════════════════════════════════════
-function drawChart(canvas, history, color) {
+function drawChart(canvas, history, color, isBodyweight) {
   const dpr = window.devicePixelRatio || 1;
-  const W = canvas.offsetWidth, H = canvas.offsetHeight;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight || 140;
+  canvas.width = W * dpr; canvas.height = H * dpr;
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
 
-  const pad = { top: 12, right: 16, bottom: 32, left: 38 };
+  const pad = { top: 14, right: 16, bottom: 32, left: 42 };
   const cw = W - pad.left - pad.right;
   const ch = H - pad.top - pad.bottom;
 
-  const vals = history.map(h => h.maxWeight);
+  const vals = isBodyweight ? history.map(h => h.totalReps) : history.map(h => h.maxWeight);
   const minV = Math.max(0, Math.min(...vals) * 0.88);
   const maxV = Math.max(...vals) * 1.08;
   const range = maxV - minV || 1;
-
   const xOf = i => pad.left + (i / (history.length - 1 || 1)) * cw;
   const yOf = v => pad.top + ch - ((v - minV) / range) * ch;
 
-  // Grid lines
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
-  ctx.lineWidth = 1;
+  // Grid
+  ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 1;
   for (let i = 0; i <= 3; i++) {
     const y = pad.top + (ch / 3) * i;
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
-    const gridVal = maxV - (range / 3) * i;
+    const gv = maxV - (range / 3) * i;
     ctx.fillStyle = "rgba(255,255,255,0.25)";
     ctx.font = `600 9px 'JetBrains Mono', monospace`;
     ctx.textAlign = "right";
-    ctx.fillText(gridVal.toFixed(0) + "kg", pad.left - 5, y + 4);
+    ctx.fillText(isBodyweight ? Math.round(gv) + 'r' : gv.toFixed(0) + 'kg', pad.left - 5, y + 4);
   }
 
   if (history.length < 2) {
-    // Single dot
     const x = xOf(0), y = yOf(vals[0]);
     ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
     ctx.fillStyle = color; ctx.fill();
-    // Label
     ctx.fillStyle = "#fff"; ctx.font = `700 10px 'Barlow', sans-serif`;
     ctx.textAlign = "center";
     ctx.fillText(formatDate(history[0].date), x, H - 8);
     return;
   }
 
-  // Gradient fill under line
+  // Gradient fill
   const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
-  grad.addColorStop(0, hex2rgb(color, 0.22));
-  grad.addColorStop(1, hex2rgb(color, 0.0));
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), yOf(vals[0]));
+  grad.addColorStop(0, hex2rgb(color, 0.22)); grad.addColorStop(1, hex2rgb(color, 0.0));
+  ctx.beginPath(); ctx.moveTo(xOf(0), yOf(vals[0]));
   for (let i = 1; i < history.length; i++) {
-    const x0 = xOf(i-1), y0 = yOf(vals[i-1]);
-    const x1 = xOf(i), y1 = yOf(vals[i]);
-    const cpx = (x0 + x1) / 2;
-    ctx.bezierCurveTo(cpx, y0, cpx, y1, x1, y1);
+    const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;
+    ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);
   }
-  ctx.lineTo(xOf(history.length-1), pad.top + ch);
-  ctx.lineTo(xOf(0), pad.top + ch);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
+  ctx.lineTo(xOf(history.length-1), pad.top+ch); ctx.lineTo(xOf(0), pad.top+ch);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
 
   // Line
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), yOf(vals[0]));
+  ctx.beginPath(); ctx.moveTo(xOf(0), yOf(vals[0]));
   for (let i = 1; i < history.length; i++) {
-    const x0 = xOf(i-1), y0 = yOf(vals[i-1]);
-    const x1 = xOf(i), y1 = yOf(vals[i]);
-    const cpx = (x0 + x1) / 2;
-    ctx.bezierCurveTo(cpx, y0, cpx, y1, x1, y1);
+    const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;
+    ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);
   }
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = "round";
-  ctx.stroke();
+  ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.stroke();
 
   // Points + labels
   history.forEach((h, i) => {
     const x = xOf(i), y = yOf(vals[i]);
-    // Glow
-    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
-    ctx.fillStyle = hex2rgb(color, 0.2); ctx.fill();
-    // Dot
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
-    ctx.fillStyle = color; ctx.fill();
-    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2);
-    ctx.fillStyle = "#0C0C0F"; ctx.fill();
-
-    // Value label above point
-    ctx.fillStyle = "#fff";
-    ctx.font = `700 10px 'JetBrains Mono', monospace`;
-    ctx.textAlign = "center";
-    ctx.fillText(vals[i] + "kg", x, y - 11);
-
-    // Date label
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.font = `600 9px 'Barlow', sans-serif`;
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2); ctx.fillStyle = hex2rgb(color,0.2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fillStyle = "#0C0C0F"; ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = `700 9px 'JetBrains Mono', monospace`; ctx.textAlign = "center";
+    ctx.fillText(isBodyweight ? vals[i]+'r' : vals[i]+'kg', x, y - 11);
+    ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.font = `600 9px 'Barlow', sans-serif`;
     ctx.fillText(formatDate(h.date), x, H - 6);
   });
+}
+
+function drawTimeChart(canvas, history, color) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const pad = { top: 18, right: 16, bottom: 32, left: 46 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  const vals = history.map(h => h.durationSecs);
+  const minV = Math.max(0, Math.min(...vals)*0.85), maxV = Math.max(...vals)*1.1, range = maxV - minV || 1;
+  const xOf = i => pad.left + (i / (history.length-1||1)) * cw;
+  const yOf = v => pad.top + ch - ((v-minV)/range)*ch;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.top + (ch/3)*i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+cw, y); ctx.stroke();
+    const gv = maxV - (range/3)*i, gm = Math.floor(gv/60), gs = Math.floor(gv%60);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.font = "600 9px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'right'; ctx.fillText(gm+':'+String(gs).padStart(2,'0'), pad.left-5, y+4);
+  }
+  if (history.length < 2) {
+    const x=xOf(0),y=yOf(vals[0]); ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle=color; ctx.fill(); return;
+  }
+  const grad = ctx.createLinearGradient(0,pad.top,0,pad.top+ch);
+  grad.addColorStop(0,hex2rgb(color,0.22)); grad.addColorStop(1,hex2rgb(color,0.0));
+  ctx.beginPath(); ctx.moveTo(xOf(0),yOf(vals[0]));
+  for (let i=1;i<history.length;i++){const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);}
+  ctx.lineTo(xOf(history.length-1),pad.top+ch);ctx.lineTo(xOf(0),pad.top+ch);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(xOf(0),yOf(vals[0]));
+  for (let i=1;i<history.length;i++){const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);}
+  ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  history.forEach((h,i)=>{
+    const x=xOf(i),y=yOf(vals[i]);
+    ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fillStyle=hex2rgb(color,0.2);ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='#0C0C0F';ctx.fill();
+    const m=Math.floor(vals[i]/60),s=vals[i]%60;
+    ctx.fillStyle='#fff';ctx.font="700 9px 'JetBrains Mono', monospace";ctx.textAlign='center';
+    ctx.fillText(m+':'+String(s).padStart(2,'0'),x,y-11);
+    ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font="600 9px 'Barlow', sans-serif";
+    ctx.fillText(formatDate(h.date),x,H-6);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODAL SYSTEM
+// ═══════════════════════════════════════════════════════════
+let _pendingConfirm = null;
+
+function openModal(html) {
+  document.getElementById('modal-overlay').style.display = 'block';
+  const ms = document.getElementById('modal-sheet');
+  ms.innerHTML = html; ms.style.display = 'block';
+}
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  document.getElementById('modal-sheet').style.display = 'none';
+}
+
+function openConfirmModal(title, msg, onConfirm) {
+  _pendingConfirm = onConfirm;
+  openModal(`
+    <div class="modal-handle"></div>
+    <div style="text-align:center;padding:0 8px">
+      <div style="font-size:36px;margin-bottom:14px">⚠️</div>
+      <div class="modal-title" style="text-align:center">${title}</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:28px;line-height:1.55">${msg}</div>
+      <button class="modal-btn-primary" style="background:#f87171;color:#000" onclick="executeConfirm()">Confirmar</button>
+      <button class="modal-btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+function executeConfirm() {
+  if (_pendingConfirm) { _pendingConfirm(); _pendingConfirm = null; }
+  closeModal();
+}
+
+function openProfileModal() {
+  const p = loadProfile();
+  openModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">Mi Perfil</div>
+    <div class="profile-field">
+      <div class="profile-label">Nombre</div>
+      <input id="pf-name" class="profile-input" value="${p.name||''}" placeholder="Tu nombre (opcional)">
+    </div>
+    <div class="profile-field">
+      <div class="profile-label">Edad (años)</div>
+      <input id="pf-age" class="profile-input" type="number" value="${p.age||''}" placeholder="Ej: 51">
+    </div>
+    <div class="profile-field">
+      <div class="profile-label">Peso corporal (kg)</div>
+      <input id="pf-weight" class="profile-input" type="number" value="${p.weight||''}" placeholder="Ej: 89" step="0.1">
+    </div>
+    <div class="profile-field">
+      <div class="profile-label">Objetivo</div>
+      <input id="pf-goal" class="profile-input" value="${p.goal||''}" placeholder="Ej: V-Shape, Definición...">
+    </div>
+    <button class="modal-btn-primary" style="background:#4ade80;color:#000" onclick="saveProfileFromModal()">Guardar Perfil</button>
+    <button class="modal-btn-secondary" onclick="closeModal()">Cancelar</button>
+  `);
+}
+function saveProfileFromModal() {
+  const p = {
+    name: document.getElementById('pf-name').value.trim(),
+    age: parseFloat(document.getElementById('pf-age').value)||0,
+    weight: parseFloat(document.getElementById('pf-weight').value)||0,
+    goal: document.getElementById('pf-goal').value.trim()
+  };
+  saveProfile(p); renderBottomBar(); closeModal();
+  showToast('Perfil guardado', '#4ade80');
+}
+
+// ═══════════════════════════════════════════════════════════
+// CELEBRATION
+// ═══════════════════════════════════════════════════════════
+const _celebratedKeys = new Set();
+
+function celebrate(color) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+  document.body.appendChild(canvas);
+  const W = canvas.width = window.innerWidth, H = canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const cols = [color, '#ffffff', '#ffb300', '#4ade80'];
+  const particles = Array.from({length:70}, () => ({
+    x: Math.random()*W, y: Math.random()*H - H,
+    r: Math.random()*5+3, d: Math.random()*30+10,
+    col: cols[Math.floor(Math.random()*cols.length)],
+    tiltAngle: 0, tiltInc: Math.random()*0.07+0.04
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.tiltAngle += p.tiltInc;
+      p.y += Math.cos(frame/15+p.d) + p.d/8;
+      p.tilt = Math.sin(p.tiltAngle)*13;
+      ctx.beginPath(); ctx.lineWidth = p.r;
+      ctx.strokeStyle = p.col;
+      ctx.moveTo(p.x+p.tilt+p.r/4, p.y);
+      ctx.lineTo(p.x+p.tilt, p.y+p.tilt+p.r/4);
+      ctx.stroke();
+      if (p.y > H+20) { p.x = Math.random()*W; p.y = -20; }
+    });
+    frame++;
+    if (frame < 160) requestAnimationFrame(draw);
+    else canvas.remove();
+  }
+  draw();
+  showToast('🎉 ¡Rutina completada!', color);
+}
+
+function checkAndCelebrate() {
+  const key = `${activeDay}_${todayStr()}`;
+  if (_celebratedKeys.has(key)) return;
+  const day = PLAN[activeDay];
+  const d = loadData();
+  let total = 0, done = 0;
+  day.blocks.forEach(b => b.exercises.forEach(e => {
+    const entry = d[dataKey(activeDay, b.id, e.id)];
+    total += e.sets;
+    if (entry?.completed) done += entry.completed.filter(Boolean).length;
+  }));
+  if (total > 0 && done === total) {
+    _celebratedKeys.add(key);
+    setTimeout(() => celebrate(PLAN[activeDay].color), 400);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
 // VIEW SWITCHING
 // ═══════════════════════════════════════════════════════════
 let currentView = "entreno";
+
 function showView(view) {
   currentView = view;
-  const isEntreno = view === "entreno";
-  document.getElementById("entreno-view").style.display = isEntreno ? "" : "none";
-  document.getElementById("progreso-view").style.display = isEntreno ? "none" : "block";
-
-  const activeColor = PLAN[activeDay].color;
-  const btnE = document.getElementById("nav-entreno");
-  const btnP = document.getElementById("nav-progreso");
-
-  if (isEntreno) {
-    btnE.style.background = hex2rgb(activeColor, 0.12);
-    btnE.style.borderColor = activeColor;
-    btnE.style.color = activeColor;
-    btnP.style.background = "rgba(255,255,255,0.04)";
-    btnP.style.borderColor = "rgba(255,255,255,0.1)";
-    btnP.style.color = "rgba(255,255,255,0.4)";
-  } else {
-    btnP.style.background = hex2rgb(activeColor, 0.12);
-    btnP.style.borderColor = activeColor;
-    btnP.style.color = activeColor;
-    btnE.style.background = "rgba(255,255,255,0.04)";
-    btnE.style.borderColor = "rgba(255,255,255,0.1)";
-    btnE.style.color = "rgba(255,255,255,0.4)";
-    renderProgreso();
-  }
+  const views = { entreno: 'entreno-view', progreso: 'progreso-view', plan: 'plan-view' };
+  Object.entries(views).forEach(([k,id]) => {
+    document.getElementById(id).style.display = k === view ? '' : 'none';
+  });
+  const color = PLAN[activeDay].color;
+  ['entreno','progreso','plan'].forEach(v => {
+    const btn = document.getElementById('nav-' + v);
+    if (v === view) {
+      btn.style.background = hex2rgb(color, 0.12);
+      btn.style.borderColor = color;
+      btn.style.color = color;
+    } else {
+      btn.style.background = 'rgba(255,255,255,0.04)';
+      btn.style.borderColor = 'rgba(255,255,255,0.1)';
+      btn.style.color = 'rgba(255,255,255,0.4)';
+    }
+  });
+  if (view === 'progreso') renderProgreso();
+  if (view === 'plan') renderPlanEditor();
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER PROGRESO
+// RENDER PROGRESO (ENHANCED)
 // ═══════════════════════════════════════════════════════════
 function renderProgreso() {
   const container = document.getElementById("progreso-view");
-  let anyData = false;
-  let html = "";
+  let anyData = false, html = "";
 
-  // ── Session duration section ──────────────────────────────
-  let sessionHtml = "";
+  // Session durations
+  let sessHtml = "";
   DAY_ORDER.forEach(dayKey => {
-    const day = PLAN[dayKey];
-    const color = day.color;
+    const day = PLAN[dayKey], color = day.color;
     const sessHistory = getSessionHistory(dayKey);
-    if (sessHistory.length === 0) return;
+    if (!sessHistory.length) return;
     anyData = true;
     const best = Math.min(...sessHistory.map(h=>h.durationSecs));
     const last = sessHistory[sessHistory.length-1].durationSecs;
-    const bm = Math.floor(best/60), bs = best%60;
-    const lm = Math.floor(last/60), ls = last%60;
+    const bm = Math.floor(best/60), bs = best%60, lm = Math.floor(last/60), ls = last%60;
     const canvasId = 'sess-chart-' + dayKey.replace(/ /g,'_');
-    sessionHtml += `
+    sessHtml += `
       <div class="prog-session-card" style="border-color:${hex2rgb(color,0.15)}">
         <div class="prog-session-title">
           <div class="prog-day-dot" style="background:${color}"></div>
@@ -595,74 +909,71 @@ function renderProgreso() {
         </div>
         <canvas id="${canvasId}" class="prog-chart-time"></canvas>
         <div class="prog-stats-row" style="margin-top:10px">
-          <div class="prog-stat">
-            <div class="prog-stat-val" style="color:${color}">${sessHistory.length}</div>
-            <div class="prog-stat-lbl">Sesiones</div>
-          </div>
-          <div class="prog-stat">
-            <div class="prog-stat-val" style="color:${color}">${lm}:${String(ls).padStart(2,'0')}</div>
-            <div class="prog-stat-lbl">Última</div>
-          </div>
-          <div class="prog-stat">
-            <div class="prog-stat-val" style="color:${color}">${bm}:${String(bs).padStart(2,'0')}</div>
-            <div class="prog-stat-lbl">Mejor</div>
-          </div>
+          <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${sessHistory.length}</div><div class="prog-stat-lbl">Sesiones</div></div>
+          <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${lm}:${String(ls).padStart(2,'0')}</div><div class="prog-stat-lbl">Última</div></div>
+          <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${bm}:${String(bs).padStart(2,'0')}</div><div class="prog-stat-lbl">Mejor</div></div>
         </div>
       </div>`;
   });
+  if (sessHtml) html += `<div style="margin-bottom:8px;padding:16px 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>` + sessHtml;
 
-  if (sessionHtml) {
-    html += `<div style="margin-bottom:8px;padding:16px 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>` + sessionHtml;
-  }
-
+  // Exercise progress per day
   DAY_ORDER.forEach(dayKey => {
-    const day = PLAN[dayKey];
-    const color = day.color;
+    const day = PLAN[dayKey], color = day.color;
     let dayHtml = "";
 
     day.blocks.forEach(block => {
       block.exercises.forEach(ex => {
         const history = getExerciseHistory(dayKey, block.id, ex.id);
-        if (history.length === 0) return;
+        if (!history.length) return;
         anyData = true;
 
-        const best = Math.max(...history.map(h => h.maxWeight));
-        const first = history[0].maxWeight;
-        const last = history[history.length-1].maxWeight;
-        const delta = last - first;
-        const deltaStr = delta >= 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
-        const sessions = history.length;
-        const totalVol = history.reduce((s,h) => s + h.totalVol, 0);
-        const trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
-        const trendColor = delta > 0 ? "#4ade80" : delta < 0 ? "#f87171" : "rgba(255,255,255,0.4)";
+        const isBW = history.every(h => h.isBodyweight);
         const canvasId = `chart-${dayKey}-${block.id}-${ex.id}`.replace(/ /g,"_");
+
+        let bestVal, firstVal, lastVal, deltaStr, trend, trendColor;
+        let statMid, statMidLbl, statRight, statRightLbl;
+
+        if (isBW) {
+          bestVal = Math.max(...history.map(h => h.totalReps));
+          firstVal = history[0].totalReps;
+          lastVal = history[history.length-1].totalReps;
+          const delta = lastVal - firstVal;
+          deltaStr = delta >= 0 ? `+${delta}` : `${delta}`;
+          trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
+          trendColor = delta > 0 ? "#4ade80" : delta < 0 ? "#f87171" : "rgba(255,255,255,0.4)";
+          statMid = `${trend} ${Math.abs(delta)}r`; statMidLbl = "Evolución";
+          statRight = `${bestVal}r`; statRightLbl = "Mejor sesión";
+        } else {
+          bestVal = Math.max(...history.map(h => h.maxWeight));
+          firstVal = history[0].maxWeight;
+          lastVal = history[history.length-1].maxWeight;
+          const delta = parseFloat((lastVal - firstVal).toFixed(1));
+          deltaStr = delta >= 0 ? `+${delta}` : `${delta}`;
+          trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
+          trendColor = delta > 0 ? "#4ade80" : delta < 0 ? "#f87171" : "rgba(255,255,255,0.4)";
+          const totalVol = history.reduce((s,h) => s + h.totalVol, 0);
+          statMid = `${trend} ${Math.abs(delta)}kg`; statMidLbl = "Evolución";
+          statRight = totalVol >= 1000 ? (totalVol/1000).toFixed(1)+"t" : totalVol+"kg"; statRightLbl = "Vol. total";
+        }
+
+        const badgeLabel = isBW ? `${bestVal} reps` : `${bestVal}kg max`;
+        const breakdownHtml = renderSessionBreakdown(history, color, isBW);
 
         dayHtml += `
           <div class="prog-ex-card">
             <div class="prog-ex-header">
               <div class="ex-id-badge" style="color:${color};background:${hex2rgb(color,0.12)};border-color:${color}">${ex.id}</div>
               <div class="prog-ex-name">${ex.name}</div>
-              <div class="prog-ex-best" style="color:${color};background:${hex2rgb(color,0.1)};border-color:${hex2rgb(color,0.3)}">
-                ${best}kg max
-              </div>
+              <div class="prog-ex-best" style="color:${color};background:${hex2rgb(color,0.1)};border-color:${hex2rgb(color,0.3)}">${badgeLabel}</div>
             </div>
-            <div class="prog-canvas-wrap">
-              <canvas id="${canvasId}" class="prog-chart"></canvas>
-            </div>
+            <div class="prog-canvas-wrap"><canvas id="${canvasId}" class="prog-chart"></canvas></div>
             <div class="prog-stats-row">
-              <div class="prog-stat">
-                <div class="prog-stat-val" style="color:${color}">${sessions}</div>
-                <div class="prog-stat-lbl">Sesiones</div>
-              </div>
-              <div class="prog-stat">
-                <div class="prog-stat-val" style="color:${trendColor}">${trend} ${Math.abs(delta).toFixed(1)}kg</div>
-                <div class="prog-stat-lbl">Evolución</div>
-              </div>
-              <div class="prog-stat">
-                <div class="prog-stat-val" style="color:${color}">${totalVol >= 1000 ? (totalVol/1000).toFixed(1)+"t" : totalVol+"kg"}</div>
-                <div class="prog-stat-lbl">Vol. total</div>
-              </div>
+              <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${history.length}</div><div class="prog-stat-lbl">Sesiones</div></div>
+              <div class="prog-stat"><div class="prog-stat-val" style="color:${trendColor}">${statMid}</div><div class="prog-stat-lbl">${statMidLbl}</div></div>
+              <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${statRight}</div><div class="prog-stat-lbl">${statRightLbl}</div></div>
             </div>
+            ${breakdownHtml}
           </div>`;
       });
     });
@@ -674,104 +985,80 @@ function renderProgreso() {
             <div class="prog-day-dot" style="background:${color}"></div>
             <span style="color:${color}">${day.label}</span>
             <span style="color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:0">${day.sub}</span>
-          </div>
-          ${dayHtml}
+          </div>${dayHtml}
         </div>`;
     }
   });
 
   if (!anyData) {
-    html = `
-      <div class="prog-no-data">
-        <div class="prog-no-data-icon">📊</div>
-        <div class="prog-no-data-txt">Sin datos todavía</div>
-        <div class="prog-no-data-sub">Completa series marcando el ✓ para ver tu evolución aquí</div>
-      </div>`;
+    html = `<div class="prog-no-data"><div class="prog-no-data-icon">📊</div><div class="prog-no-data-txt">Sin datos todavía</div><div class="prog-no-data-sub">Completa series marcando el ✓ para ver tu evolución aquí</div></div>`;
   }
 
   container.innerHTML = html;
 
-  // Draw all charts after DOM is ready
   if (anyData) {
     requestAnimationFrame(() => {
-      // Exercise load charts
       DAY_ORDER.forEach(dayKey => {
         const day = PLAN[dayKey];
         day.blocks.forEach(block => {
           block.exercises.forEach(ex => {
             const history = getExerciseHistory(dayKey, block.id, ex.id);
-            if (history.length === 0) return;
+            if (!history.length) return;
             const canvasId = `chart-${dayKey}-${block.id}-${ex.id}`.replace(/ /g,"_");
             const canvas = document.getElementById(canvasId);
-            if (canvas) drawChart(canvas, history, day.color);
+            if (canvas) drawChart(canvas, history, day.color, history.every(h => h.isBodyweight));
           });
         });
-        // Session time chart
-        const sessHistory = getSessionHistory(dayKey);
-        if (sessHistory.length > 0) {
-          const canvas = document.getElementById('sess-chart-' + dayKey.replace(/ /g,'_'));
-          if (canvas) drawTimeChart(canvas, sessHistory, PLAN[dayKey].color);
+        const sessH = getSessionHistory(dayKey);
+        if (sessH.length) {
+          const c = document.getElementById('sess-chart-' + dayKey.replace(/ /g,'_'));
+          if (c) drawTimeChart(c, sessH, PLAN[dayKey].color);
         }
       });
     });
   }
 }
 
-
 // ═══════════════════════════════════════════════════════════
 // ROUTINE TIMER
 // ═══════════════════════════════════════════════════════════
-let routineStartTime = null;
-let routineInterval = null;
+let routineStartTime = null, routineInterval = null;
 
 function fmtDuration(secs) {
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = secs % 60;
+  const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
   if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 function startRoutine() {
-  if (routineInterval) return; // already running
+  if (routineInterval) return;
   routineStartTime = Date.now();
   const color = PLAN[activeDay].color;
   const bar = document.getElementById('routine-timer-bar');
-  bar.classList.add('active');
-  bar.style.borderColor = hex2rgb(color, 0.3);
+  bar.classList.add('active'); bar.style.borderColor = hex2rgb(color,0.3);
   document.getElementById('rt-time').style.color = color;
   document.getElementById('btn-start-routine').style.display = 'none';
   const finBtn = document.getElementById('btn-rt-finish');
-  finBtn.style.background = hex2rgb(color, 0.15);
-  finBtn.style.color = color;
-  finBtn.style.border = '1.5px solid ' + hex2rgb(color, 0.4);
-
+  finBtn.style.background = hex2rgb(color,0.15); finBtn.style.color = color;
+  finBtn.style.border = '1.5px solid ' + hex2rgb(color,0.4);
   routineInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - routineStartTime) / 1000);
-    document.getElementById('rt-time').textContent = fmtDuration(elapsed);
+    document.getElementById('rt-time').textContent = fmtDuration(Math.floor((Date.now()-routineStartTime)/1000));
   }, 1000);
 }
 
 function finishRoutine() {
   if (!routineStartTime) return;
-  clearInterval(routineInterval);
-  routineInterval = null;
-  const elapsed = Math.floor((Date.now() - routineStartTime) / 1000);
+  clearInterval(routineInterval); routineInterval = null;
+  const elapsed = Math.floor((Date.now()-routineStartTime)/1000);
   routineStartTime = null;
-
-  // Save session duration
   const d = loadData();
   const key = 'session_' + activeDay.replace(/ /g,'_') + '_' + todayStr();
   d[key] = { date: todayStr(), day: activeDay, durationSecs: elapsed };
   saveData(d);
-
-  // Update UI
   const bar = document.getElementById('routine-timer-bar');
   bar.classList.remove('active');
   document.getElementById('rt-time').textContent = '00:00';
   document.getElementById('btn-start-routine').style.display = 'flex';
-
-  // Show a brief confirmation toast
   showToast('Sesión guardada · ' + fmtDuration(elapsed), PLAN[activeDay].color);
 }
 
@@ -780,7 +1067,7 @@ function resetRoutineTimer() {
   routineStartTime = null;
   const bar = document.getElementById('routine-timer-bar');
   if (bar) bar.classList.remove('active');
-  document.getElementById('rt-time').textContent = '00:00';
+  const rt = document.getElementById('rt-time'); if (rt) rt.textContent = '00:00';
   const startBtn = document.getElementById('btn-start-routine');
   if (startBtn) startBtn.style.display = 'flex';
 }
@@ -788,114 +1075,94 @@ function resetRoutineTimer() {
 function showToast(msg, color) {
   let toast = document.getElementById('toast');
   if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
+    toast = document.createElement('div'); toast.id = 'toast';
     toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:999;transition:opacity 0.4s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center';
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
-  toast.style.background = hex2rgb(color, 0.15);
-  toast.style.border = '1px solid ' + hex2rgb(color, 0.4);
+  toast.style.background = hex2rgb(color,0.18);
+  toast.style.border = '1px solid ' + hex2rgb(color,0.4);
   toast.style.color = color;
   toast.style.opacity = '1';
-  setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
 }
 
 // ═══════════════════════════════════════════════════════════
-// SESSION TIME HISTORY
+// REST TIMER (IMPROVED: DOM UPDATES, BEEP ON END)
 // ═══════════════════════════════════════════════════════════
-function getSessionHistory(dayKey) {
-  const all = loadData();
-  const prefix = 'session_' + dayKey.replace(/ /g,'_') + '_';
-  const history = [];
-  Object.entries(all).forEach(([key, val]) => {
-    if (!key.startsWith(prefix)) return;
-    if (val.durationSecs && val.date) {
-      history.push({ date: val.date, durationSecs: val.durationSecs });
+const timers = {};
+
+function startTimer(timerKey, duration, color, containerId) {
+  if (timers[timerKey]) { clearInterval(timers[timerKey].interval); }
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  timers[timerKey] = { remaining: duration, duration };
+  const rv = 26, circ = 2 * Math.PI * rv;
+
+  container.style.display = 'flex'; container.style.borderColor = hex2rgb(color,0.2);
+  container.innerHTML = `
+    <svg class="timer-svg" width="66" height="66" aria-hidden="true">
+      <circle cx="33" cy="33" r="${rv}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+      <circle id="tarc-${timerKey}" cx="33" cy="33" r="${rv}" fill="none" stroke="${color}" stroke-width="5"
+        stroke-dasharray="${circ} ${circ}" stroke-linecap="round"/>
+      <text id="tsvg-${timerKey}" x="33" y="33" text-anchor="middle" dominant-baseline="central" fill="${color}"
+        font-size="13" font-weight="700" font-family="monospace"
+        style="transform:rotate(90deg);transform-origin:33px 33px">${duration}s</text>
+    </svg>
+    <div style="flex:1">
+      <div class="timer-label">DESCANSO</div>
+      <div id="tval-${timerKey}" class="timer-val">${duration}s restantes</div>
+      <div class="timer-status">Recuperando…</div>
+    </div>
+    <button class="btn-skip" onclick="skipTimer('${timerKey}','${containerId}')" aria-label="Saltar descanso">
+      ${SVG_SKIP} Skip
+    </button>`;
+
+  timers[timerKey].interval = setInterval(() => {
+    const t = timers[timerKey]; if (!t) return;
+    t.remaining--;
+    if (t.remaining <= 0) {
+      clearInterval(t.interval); delete timers[timerKey];
+      const c = document.getElementById(containerId);
+      if (c) { c.style.display = 'none'; c.innerHTML = ''; }
+      playBeep();
+      return;
     }
-  });
-  history.sort((a,b) => a.date.localeCompare(b.date));
-  return history;
+    const arc = document.getElementById(`tarc-${timerKey}`);
+    const val = document.getElementById(`tval-${timerKey}`);
+    const svgTxt = document.getElementById(`tsvg-${timerKey}`);
+    const dash = (t.remaining / t.duration) * circ;
+    if (arc) arc.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+    if (val) val.textContent = `${t.remaining}s restantes`;
+    if (svgTxt) svgTxt.textContent = `${t.remaining}s`;
+  }, 1000);
 }
 
-function drawTimeChart(canvas, history, color) {
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.offsetWidth, H = canvas.offsetHeight;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
+function skipTimer(timerKey, containerId) {
+  if (timers[timerKey]) { clearInterval(timers[timerKey].interval); delete timers[timerKey]; }
+  const c = document.getElementById(containerId);
+  if (c) { c.style.display = 'none'; c.innerHTML = ''; }
+}
 
-  const pad = { top: 18, right: 16, bottom: 32, left: 46 };
-  const cw = W - pad.left - pad.right;
-  const ch = H - pad.top - pad.bottom;
-  const vals = history.map(h => h.durationSecs);
-  const minV = Math.max(0, Math.min(...vals) * 0.85);
-  const maxV = Math.max(...vals) * 1.1;
-  const range = maxV - minV || 1;
-  const xOf = i => pad.left + (i / (history.length - 1 || 1)) * cw;
-  const yOf = v => pad.top + ch - ((v - minV) / range) * ch;
-
-  // Grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
-  for (let i = 0; i <= 3; i++) {
-    const y = pad.top + (ch / 3) * i;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
-    const gv = maxV - (range / 3) * i;
-    const gm = Math.floor(gv / 60), gs = Math.floor(gv % 60);
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = "600 9px 'JetBrains Mono', monospace";
-    ctx.textAlign = 'right';
-    ctx.fillText(gm + ':' + String(gs).padStart(2,'0'), pad.left - 5, y + 4);
-  }
-
-  if (history.length < 2) {
-    const x = xOf(0), y = yOf(vals[0]);
-    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
-    ctx.fillStyle = color; ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = "700 10px 'Barlow', sans-serif";
-    ctx.textAlign = 'center';
-    ctx.fillText(formatDate(history[0].date), x, H - 8);
-    return;
-  }
-
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
-  grad.addColorStop(0, hex2rgb(color, 0.22));
-  grad.addColorStop(1, hex2rgb(color, 0.0));
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), yOf(vals[0]));
-  for (let i = 1; i < history.length; i++) {
-    const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;
-    ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);
-  }
-  ctx.lineTo(xOf(history.length-1), pad.top+ch);
-  ctx.lineTo(xOf(0), pad.top+ch);
-  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
-
-  // Line
-  ctx.beginPath(); ctx.moveTo(xOf(0), yOf(vals[0]));
-  for (let i = 1; i < history.length; i++) {
-    const x0=xOf(i-1),y0=yOf(vals[i-1]),x1=xOf(i),y1=yOf(vals[i]),cpx=(x0+x1)/2;
-    ctx.bezierCurveTo(cpx,y0,cpx,y1,x1,y1);
-  }
-  ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke();
-
-  // Points
-  history.forEach((h, i) => {
-    const x = xOf(i), y = yOf(vals[i]);
-    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
-    ctx.fillStyle = hex2rgb(color,0.2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
-    ctx.fillStyle = color; ctx.fill();
-    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2);
-    ctx.fillStyle = '#0C0C0F'; ctx.fill();
-    const m = Math.floor(vals[i]/60), s = vals[i]%60;
-    ctx.fillStyle = '#fff'; ctx.font = "700 10px 'JetBrains Mono', monospace";
-    ctx.textAlign = 'center';
-    ctx.fillText(m + ':' + String(s).padStart(2,'0'), x, y - 11);
-    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = "600 9px 'Barlow', sans-serif";
-    ctx.fillText(formatDate(h.date), x, H - 6);
-  });
+// ═══════════════════════════════════════════════════════════
+// PROGRESS BAR
+// ═══════════════════════════════════════════════════════════
+function updateProgress() {
+  const day = PLAN[activeDay]; const d = loadData();
+  let total = 0, done = 0;
+  day.blocks.forEach(b => b.exercises.forEach(e => {
+    const entry = d[dataKey(activeDay, b.id, e.id)];
+    total += e.sets;
+    if (entry?.completed) done += entry.completed.filter(Boolean).length;
+  }));
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  const color = day.color;
+  document.getElementById("progress-val").textContent = `${done}/${total} series · ${pct}%`;
+  document.getElementById("progress-val").style.color = color;
+  document.getElementById("progress-bar").style.width = pct + "%";
+  document.getElementById("progress-bar").style.background = color;
+  document.getElementById("progress-bar").style.boxShadow = `0 0 8px ${hex2rgb(color,0.5)}`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -909,95 +1176,14 @@ const SVG_SKIP = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" st
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-let activeDay = "Torso A";
-const timers = {};
-
-// ═══════════════════════════════════════════════════════════
-// REST TIMER
-// ═══════════════════════════════════════════════════════════
-function startTimer(timerKey, duration, color, containerId) {
-  if (timers[timerKey]) clearInterval(timers[timerKey].interval);
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  timers[timerKey] = { remaining: duration, duration, interval: null };
-
-  function render() {
-    const t = timers[timerKey];
-    if (!t) return;
-    const pct = (t.remaining / t.duration) * 100;
-    const rv = 26, circ = 2 * Math.PI * rv;
-    const dash = (pct / 100) * circ;
-    container.style.display = "flex";
-    container.style.borderColor = hex2rgb(color, 0.2);
-    container.innerHTML = `
-      <svg class="timer-svg" width="66" height="66">
-        <circle cx="33" cy="33" r="${rv}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
-        <circle cx="33" cy="33" r="${rv}" fill="none" stroke="${color}" stroke-width="5"
-          stroke-dasharray="${dash} ${circ}" stroke-linecap="round" style="transition:stroke-dasharray 0.9s linear"/>
-        <text x="33" y="33" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="13" font-weight="700" font-family="monospace"
-          style="transform:rotate(90deg);transform-origin:33px 33px">${t.remaining}s</text>
-      </svg>
-      <div style="flex:1">
-        <div class="timer-label">DESCANSO</div>
-        <div class="timer-val">${t.remaining}s restantes</div>
-        <div class="timer-status">Recuperando…</div>
-      </div>
-      <button class="btn-skip" onclick="skipTimer('${timerKey}','${containerId}')">${SVG_SKIP} Skip</button>`;
-  }
-
-  render();
-  timers[timerKey].interval = setInterval(() => {
-    timers[timerKey].remaining--;
-    if (timers[timerKey].remaining <= 0) {
-      clearInterval(timers[timerKey].interval);
-      delete timers[timerKey];
-      const c = document.getElementById(containerId);
-      if (c) { c.style.display = "none"; c.innerHTML = ""; }
-    } else render();
-  }, 1000);
-}
-
-function skipTimer(timerKey, containerId) {
-  if (timers[timerKey]) { clearInterval(timers[timerKey].interval); delete timers[timerKey]; }
-  const c = document.getElementById(containerId);
-  if (c) { c.style.display = "none"; c.innerHTML = ""; }
-}
-
-// ═══════════════════════════════════════════════════════════
-// PROGRESS BAR
-// ═══════════════════════════════════════════════════════════
-function updateProgress() {
-  const day = PLAN[activeDay];
-  const d = loadData();
-  let total = 0, done = 0;
-  day.blocks.forEach(b => b.exercises.forEach(e => {
-    const entry = d[dataKey(activeDay, b.id, e.id)];
-    total += e.sets;
-    if (entry?.completed) done += entry.completed.filter(Boolean).length;
-  }));
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const color = day.color;
-  document.getElementById("progress-val").textContent = `${done}/${total} series · ${pct}%`;
-  document.getElementById("progress-val").style.color = color;
-  document.getElementById("progress-bar").style.width = pct + "%";
-  document.getElementById("progress-bar").style.background = color;
-  document.getElementById("progress-bar").style.boxShadow = `0 0 8px ${hex2rgb(color, 0.53)}`;
-}
+let activeDay = DAY_ORDER[0];
 
 // ═══════════════════════════════════════════════════════════
 // CHECK SET
 // ═══════════════════════════════════════════════════════════
 function handleCheck(btn) {
-  const dayKey = btn.dataset.day;
-  const blockId = btn.dataset.block;
-  const exId = btn.dataset.ex;
-  const setIdx = parseInt(btn.dataset.set);
-  const numSets = parseInt(btn.dataset.numsets);
-  const restDuration = parseInt(btn.dataset.rest);
-  const color = btn.dataset.color;
-  const isSS = btn.dataset.iss === "true";
-  const blockExIds = btn.dataset.exids.split(',');
-  checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, isSS, blockExIds);
+  const { day: dayKey, block: blockId, ex: exId, set: setIdx, numsets: numSets, rest: restDuration, color, iss: isSS, exids: blockExIds } = btn.dataset;
+  checkSet(dayKey, blockId, exId, parseInt(setIdx), parseInt(numSets), parseInt(restDuration), color, isSS==="true", blockExIds.split(','));
 }
 
 function checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, isSS, blockExIds) {
@@ -1011,17 +1197,14 @@ function checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, i
   data.completed[setIdx] = true;
   setExData(dayKey, blockId, exId, data);
   renderSetRow(dayKey, blockId, exId, setIdx, data, color);
+  playCheckSound();
 
-  // Timer logic: SS fires after all exercises in block complete same round, non-SS fires per set
   if (isSS) {
-    const exIds = Array.isArray(blockExIds) ? blockExIds : JSON.parse(blockExIds);
-    const allRoundDone = exIds.every(eid => {
+    const allRoundDone = blockExIds.every(eid => {
       const d = getExData(dayKey, blockId, eid, numSets);
       return d.completed[setIdx] === true;
     });
-    if (allRoundDone) {
-      startTimer(`timer-block-${dayKey}-${blockId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
-    }
+    if (allRoundDone) startTimer(`timer-block-${dayKey}-${blockId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
   } else {
     startTimer(`timer-${dayKey}-${blockId}-${exId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
   }
@@ -1033,6 +1216,7 @@ function checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, i
     if (card) { card.style.background = "rgba(255,255,255,0.02)"; card.style.borderColor = "rgba(255,255,255,0.06)"; }
   }
   updateProgress();
+  checkAndCelebrate();
 }
 
 function renderSetRow(dayKey, blockId, exId, setIdx, data, color) {
@@ -1043,14 +1227,12 @@ function renderSetRow(dayKey, blockId, exId, setIdx, data, color) {
   const numEl = row.querySelector(".set-num");
   if (done) {
     numEl.innerHTML = SVG_CHECK_SM;
-    numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:all 0.2s;flex-shrink:0;color:${color};border:1.5px solid ${color};background:${hex2rgb(color,0.12)}`;
+    numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all 0.2s;flex-shrink:0;color:${color};border:1.5px solid ${color};background:${hex2rgb(color,0.12)}`;
   } else {
-    numEl.textContent = setIdx + 1;
+    numEl.textContent = setIdx+1;
     numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:all 0.2s;flex-shrink:0;color:rgba(255,255,255,0.4);border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.07)`;
   }
-  const wInp = row.querySelector(".inp-w");
-  const rInp = row.querySelector(".inp-r");
-  const btn = row.querySelector(".btn-check");
+  const wInp = row.querySelector(".inp-w"), rInp = row.querySelector(".inp-r"), btn = row.querySelector(".btn-check");
   if (wInp) wInp.disabled = done;
   if (rInp) rInp.disabled = done;
   if (btn) {
@@ -1117,15 +1299,22 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
     const btnBg = done ? hex2rgb(color,0.1) : color;
     const btnColor = done ? color : "#000";
     setRowsHTML += `
-      <div id="set-row-${dayKey}-${block.id}-${ex.id}-${i}" class="set-row${done?" done":""}">
-        <div class="set-num${done?" done":""}" style="${numStyle}">${done?SVG_CHECK_SM:(i+1)}</div>
-        <input id="inp-w-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-w" type="number" placeholder="kg" value="${w}" ${done?"disabled":""}
+      <div id="set-row-${dayKey}-${block.id}-${ex.id}-${i}" class="set-row${done?" done":""}" role="row">
+        <div class="set-num" style="${numStyle}">${done?SVG_CHECK_SM:(i+1)}</div>
+        <input id="inp-w-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-w" type="number" placeholder="kg"
+          value="${w}" ${done?"disabled":""} autocomplete="off"
+          aria-label="Peso serie ${i+1}"
           oninput="saveWeight('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
-        <span class="set-sep">×</span>
-        <input id="inp-r-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-r" type="number" placeholder="reps" value="${r}" ${done?"disabled":""}
+        <span class="set-sep" aria-hidden="true">×</span>
+        <input id="inp-r-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-r" type="number" placeholder="reps"
+          value="${r}" ${done?"disabled":""} autocomplete="off"
+          aria-label="Reps serie ${i+1}"
           oninput="saveReps('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
-        <button class="btn-check" ${done?"disabled":""} style="background:${btnBg};color:${btnColor};box-shadow:${done?"none":`0 3px 12px ${hex2rgb(color,0.27)}`};cursor:${done?"default":"pointer"}"
-          data-day="${dayKey}" data-block="${block.id}" data-ex="${ex.id}" data-set="${i}" data-numsets="${ex.sets}" data-rest="${block.rest}" data-color="${color}" data-iss="${isSS}" data-exids="${block.exercises.map(e=>e.id).join(',')}"
+        <button class="btn-check" ${done?"disabled":""} aria-label="Completar serie ${i+1}"
+          style="background:${btnBg};color:${btnColor};box-shadow:${done?"none":`0 3px 12px ${hex2rgb(color,0.27)}`};cursor:${done?"default":"pointer"}"
+          data-day="${dayKey}" data-block="${block.id}" data-ex="${ex.id}" data-set="${i}"
+          data-numsets="${ex.sets}" data-rest="${block.rest}" data-color="${color}"
+          data-iss="${isSS}" data-exids="${block.exercises.map(e=>e.id).join(',')}"
           onclick="handleCheck(this)">
           ${SVG_CHECK}
         </button>
@@ -1136,21 +1325,20 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
     <div id="ex-card-${dayKey}-${block.id}-${ex.id}" class="ex-card"
       style="border-radius:${br};background:${cardBg};border-color:${cardBorder};margin-bottom:${isSS&&!isLast?"2px":"12px"}">
       <div class="ex-header">
-        <div class="ex-id-badge" style="color:${idColor};background:${idBg};border-color:${idBorder}">${ex.id}</div>
+        <div class="ex-id-badge" style="color:${idColor};background:${idBg};border-color:${idBorder}" aria-label="Ejercicio ${ex.id}">${ex.id}</div>
         <div style="flex:1">
           <div class="ex-name" style="color:${nameColor}">${ex.name}</div>
           <div class="ex-meta">${ex.sets} series · <span style="color:${repsColor}">${ex.repsLabel} reps</span></div>
         </div>
-        <button id="btn-notes-${dayKey}-${block.id}-${ex.id}" class="btn-notes" onclick="toggleNotes('${dayKey}','${block.id}','${ex.id}')">📝</button>
+        <button id="btn-notes-${dayKey}-${block.id}-${ex.id}" class="btn-notes" onclick="toggleNotes('${dayKey}','${block.id}','${ex.id}')" aria-label="Notas del ejercicio">📝</button>
       </div>
       <textarea id="notes-${dayKey}-${block.id}-${ex.id}" class="notes-textarea"
         placeholder="Notas libres: sensaciones, técnica, ajuste de peso..."
         oninput="saveNote('${dayKey}','${block.id}','${ex.id}',${ex.sets},this.value)">${data.notes}</textarea>
-      <div class="col-headers">
+      <div class="col-headers" role="row">
         <div></div><div class="col-hdr">PESO (kg)</div><div></div><div class="col-hdr">REPS</div><div class="col-hdr">✓</div>
       </div>
       ${setRowsHTML}
-
       <div id="done-badge-${dayKey}-${block.id}-${ex.id}" class="done-badge" style="display:${allDone?"flex":"none"};color:${color}">
         ${SVG_CHECK_SM} Ejercicio completado
       </div>
@@ -1173,7 +1361,7 @@ function renderBlock(block, dayKey, color) {
     <div class="block-wrap">
       <div class="block-header">${headerHTML}</div>
       <div class="block-exercises" style="border-left:3px solid ${isSS?hex2rgb(color,0.33):"rgba(255,255,255,0.07)"}">${exercisesHTML}</div>
-      <div id="timerbox-block-${dayKey}-${block.id}" class="timer-wrap" style="display:none;margin-left:15px"></div>
+      <div id="timerbox-block-${dayKey}-${block.id}" class="timer-wrap" style="display:none;margin-left:15px" aria-live="polite"></div>
     </div>`;
 }
 
@@ -1181,9 +1369,7 @@ function renderBlock(block, dayKey, color) {
 // RENDER DAY
 // ═══════════════════════════════════════════════════════════
 function renderDay() {
-  const day = PLAN[activeDay];
-  const color = day.color;
-
+  const day = PLAN[activeDay], color = day.color;
   document.getElementById("bg-glow").style.background = `radial-gradient(circle, ${hex2rgb(color,0.082)} 0%, transparent 70%)`;
   document.getElementById("day-label").textContent = day.label;
   document.getElementById("day-sub").textContent = day.sub;
@@ -1192,7 +1378,8 @@ function renderDay() {
   const sel = document.getElementById("day-selector");
   sel.innerHTML = DAY_ORDER.map(d => {
     const isActive = d === activeDay, dc = PLAN[d].color;
-    return `<button class="day-btn" style="background:${isActive?hex2rgb(dc,0.094):"rgba(255,255,255,0.04)"};border-color:${isActive?dc:"rgba(255,255,255,0.08)"}" onclick="switchDay('${d}')">
+    return `<button class="day-btn" style="background:${isActive?hex2rgb(dc,0.094):"rgba(255,255,255,0.04)"};border-color:${isActive?dc:"rgba(255,255,255,0.08)"}"
+      onclick="switchDay('${d}')" aria-label="${PLAN[d].label}" aria-pressed="${isActive}">
       <div class="day-btn-label" style="color:${isActive?dc:"rgba(255,255,255,0.35)"}">${PLAN[d].label.split(" ").map(w=>`<div>${w}</div>`).join("")}</div>
     </button>`;
   }).join("");
@@ -1200,26 +1387,29 @@ function renderDay() {
   document.getElementById("blocks").innerHTML = day.blocks.map(b => renderBlock(b, activeDay, color)).join("");
   updateProgress();
   updateNavStyle();
-  // Style start routine button
+
   const startBtn = document.getElementById('btn-start-routine');
   if (startBtn && !routineInterval) {
-    startBtn.style.background = hex2rgb(color, 0.15);
+    startBtn.style.background = hex2rgb(color,0.15);
     startBtn.style.color = color;
-    startBtn.style.border = '1.5px solid ' + hex2rgb(color, 0.4);
+    startBtn.style.border = '1.5px solid ' + hex2rgb(color,0.4);
   }
 }
 
 function updateNavStyle() {
   const color = PLAN[activeDay].color;
-  const isEntreno = currentView === "entreno";
-  const btnE = document.getElementById("nav-entreno");
-  const btnP = document.getElementById("nav-progreso");
-  btnE.style.background = isEntreno ? hex2rgb(color,0.12) : "rgba(255,255,255,0.04)";
-  btnE.style.borderColor = isEntreno ? color : "rgba(255,255,255,0.1)";
-  btnE.style.color = isEntreno ? color : "rgba(255,255,255,0.4)";
-  btnP.style.background = !isEntreno ? hex2rgb(color,0.12) : "rgba(255,255,255,0.04)";
-  btnP.style.borderColor = !isEntreno ? color : "rgba(255,255,255,0.1)";
-  btnP.style.color = !isEntreno ? color : "rgba(255,255,255,0.4)";
+  ['entreno','progreso','plan'].forEach(v => {
+    const btn = document.getElementById('nav-' + v);
+    if (v === currentView) {
+      btn.style.background = hex2rgb(color,0.12);
+      btn.style.borderColor = color;
+      btn.style.color = color;
+    } else {
+      btn.style.background = 'rgba(255,255,255,0.04)';
+      btn.style.borderColor = 'rgba(255,255,255,0.1)';
+      btn.style.color = 'rgba(255,255,255,0.4)';
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1231,49 +1421,218 @@ function switchDay(d) {
   resetRoutineTimer();
   renderDay();
   if (currentView === "progreso") renderProgreso();
+  if (currentView === "plan") renderPlanEditor();
 }
 
 document.getElementById("btn-clear").addEventListener("click", () => {
-  const ts = todayStr(), d = loadData();
-  Object.keys(d).forEach(k => { if (k.startsWith(`${ts}_${activeDay}`)) delete d[k]; });
-  saveData(d);
-  Object.keys(timers).forEach(k => { clearInterval(timers[k].interval); delete timers[k]; });
-  renderDay();
+  openConfirmModal(
+    '¿Borrar sesión de hoy?',
+    `Se eliminarán todos los datos registrados hoy para <strong>${activeDay}</strong>. Los registros de sesiones anteriores no se verán afectados.`,
+    () => {
+      const ts = todayStr(), d = loadData();
+      Object.keys(d).forEach(k => { if (k.startsWith(`${ts}_${activeDay}`)) delete d[k]; });
+      saveData(d);
+      Object.keys(timers).forEach(k => { clearInterval(timers[k].interval); delete timers[k]; });
+      renderDay();
+      showToast('Sesión borrada', '#f87171');
+    }
+  );
 });
 
+// ═══════════════════════════════════════════════════════════
+// PLAN EDITOR
+// ═══════════════════════════════════════════════════════════
+function renderPlanEditor() {
+  planDraft = JSON.parse(JSON.stringify(PLAN));
+  const color = PLAN[activeDay].color;
+  let html = '';
+
+  DAY_ORDER.forEach(dayKey => {
+    const day = planDraft[dayKey], dc = day.color;
+    html += `
+      <div class="plan-day-card" style="border-color:${hex2rgb(dc,0.15)}">
+        <div class="plan-day-header" onclick="togglePlanDay('${dayKey}')">
+          <div class="plan-day-dot" style="background:${dc}"></div>
+          <div>
+            <div class="plan-day-title" style="color:${dc}">${day.label}</div>
+            <div class="plan-day-sub">${day.sub}</div>
+          </div>
+          <div class="plan-day-chevron" id="chevron-${dayKey}">▼</div>
+        </div>
+        <div class="plan-day-body" id="plan-day-body-${dayKey}" style="display:none">`;
+
+    day.blocks.forEach((block, bi) => {
+      html += `
+          <div class="plan-block-editor">
+            <div class="plan-block-controls">
+              <span class="plan-block-label">Bloque ${block.id}</span>
+              <div class="plan-control-group">
+                <span class="plan-control-label">Descanso</span>
+                <input class="plan-num-input" type="number" value="${block.rest}"
+                  data-pday="${dayKey}" data-pblock="${bi}" data-pex="-1" data-pfield="rest"
+                  aria-label="Descanso en segundos">
+                <span class="plan-control-label">s</span>
+              </div>
+              <div class="plan-control-group">
+                <span class="plan-control-label">SS</span>
+                <label class="plan-ss-toggle" aria-label="Súper serie">
+                  <input type="checkbox" ${block.ss?"checked":""}
+                    data-pday="${dayKey}" data-pblock="${bi}" data-pex="-1" data-pfield="ss">
+                  <span class="plan-ss-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="plan-col-headers">
+              <div class="plan-col-hdr" style="text-align:left">Ejercicio</div>
+              <div class="plan-col-hdr">Series</div>
+              <div class="plan-col-hdr">Reps / Tiempo</div>
+              <div></div>
+            </div>`;
+
+      block.exercises.forEach((ex, ei) => {
+        html += `
+            <div class="plan-ex-row">
+              <input class="plan-ex-input" type="text" value="${ex.name}"
+                data-pday="${dayKey}" data-pblock="${bi}" data-pex="${ei}" data-pfield="name"
+                placeholder="Nombre ejercicio" aria-label="Nombre del ejercicio">
+              <input class="plan-num-input" type="number" value="${ex.sets}" min="1" max="10"
+                data-pday="${dayKey}" data-pblock="${bi}" data-pex="${ei}" data-pfield="sets"
+                aria-label="Número de series">
+              <input class="plan-ex-input" type="text" value="${ex.repsLabel}"
+                data-pday="${dayKey}" data-pblock="${bi}" data-pex="${ei}" data-pfield="repsLabel"
+                placeholder="Reps / Tiempo" aria-label="Reps o tiempo">
+              <button class="plan-ex-remove" onclick="planRemoveExercise('${dayKey}',${bi},${ei})" aria-label="Eliminar ejercicio">✕</button>
+            </div>`;
+      });
+
+      html += `
+            <button class="plan-add-ex-btn" onclick="planAddExercise('${dayKey}',${bi})">+ Añadir ejercicio</button>
+          </div>`;
+    });
+
+    html += `
+        </div>
+      </div>`;
+  });
+
+  document.getElementById('plan-editor-content').innerHTML = html;
+
+  // Set up event delegation for input changes
+  const content = document.getElementById('plan-editor-content');
+  content.oninput = (e) => {
+    const { pday, pblock, pex, pfield } = e.target.dataset;
+    if (!pday || !pfield || !planDraft[pday]) return;
+    const val = e.target.type === 'number' ? (parseFloat(e.target.value)||0) : e.target.value;
+    if (pex === '-1') { planDraft[pday].blocks[+pblock][pfield] = val; }
+    else { planDraft[pday].blocks[+pblock].exercises[+pex][pfield] = val; }
+  };
+  content.onchange = (e) => {
+    const { pday, pblock, pex, pfield } = e.target.dataset;
+    if (e.target.type === 'checkbox' && pday && pfield && planDraft[pday]) {
+      planDraft[pday].blocks[+pblock][pfield] = e.target.checked;
+    }
+  };
+
+  // Style save button
+  const saveBtn = document.getElementById('plan-save-btn');
+  if (saveBtn) { saveBtn.style.background = color; saveBtn.style.color = '#000'; }
+}
+
+function togglePlanDay(dayKey) {
+  const body = document.getElementById(`plan-day-body-${dayKey}`);
+  const chevron = document.getElementById(`chevron-${dayKey}`);
+  const isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? 'block' : 'none';
+  chevron.textContent = isHidden ? '▲' : '▼';
+}
+
+function planAddExercise(dayKey, blockIdx) {
+  const block = planDraft[dayKey].blocks[blockIdx];
+  const newId = block.id + (block.exercises.length + 1);
+  block.exercises.push({ id: newId, name: 'Nuevo ejercicio', sets: 3, repsLabel: '10-12' });
+  renderPlanEditor();
+  // Re-open the day that was being edited
+  togglePlanDay(dayKey);
+}
+
+function planRemoveExercise(dayKey, blockIdx, exIdx) {
+  if (planDraft[dayKey].blocks[blockIdx].exercises.length <= 1) {
+    showToast('El bloque debe tener al menos 1 ejercicio', '#f87171'); return;
+  }
+  planDraft[dayKey].blocks[blockIdx].exercises.splice(exIdx, 1);
+  renderPlanEditor();
+  togglePlanDay(dayKey);
+}
+
+function savePlanFromEditor() {
+  if (!planDraft) return;
+  PLAN = JSON.parse(JSON.stringify(planDraft));
+  DAY_ORDER = Object.keys(PLAN);
+  savePlan(PLAN);
+  showToast('✓ Plan guardado', '#4ade80');
+  renderDay();
+  showView('entreno');
+}
+
+function resetPlanToDefault() {
+  openConfirmModal(
+    '¿Restaurar plan original?',
+    'Se perderán todos los cambios al plan. Los registros de entrenamiento <strong>no</strong> se borran.',
+    () => {
+      PLAN = JSON.parse(JSON.stringify(DEFAULT_PLAN));
+      DAY_ORDER = Object.keys(PLAN);
+      try { localStorage.removeItem(PLAN_KEY); } catch {}
+      planDraft = JSON.parse(JSON.stringify(PLAN));
+      renderPlanEditor();
+      renderDay();
+      showToast('Plan restaurado', '#4ade80');
+    }
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
-// GOOGLE DRIVE SYNC
+// SWIPE GESTURES (DAY SWITCHING)
+// ═══════════════════════════════════════════════════════════
+function setupSwipe() {
+  let startX = 0, startY = 0;
+  const el = document.getElementById('entreno-view');
+  el.addEventListener('touchstart', e => {
+    startX = e.changedTouches[0].clientX;
+    startY = e.changedTouches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+      const idx = DAY_ORDER.indexOf(activeDay);
+      if (dx < 0 && idx < DAY_ORDER.length - 1) switchDay(DAY_ORDER[idx + 1]);
+      else if (dx > 0 && idx > 0) switchDay(DAY_ORDER[idx - 1]);
+    }
+  }, { passive: true });
+}
+
+// ═══════════════════════════════════════════════════════════
+// GOOGLE DRIVE SYNC (ENHANCED)
 // ═══════════════════════════════════════════════════════════
 const DRIVE_CLIENT_ID = '601691093802-k475gd25ejmt6qippldvam0fc3ed0jhv.apps.googleusercontent.com';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILE_NAME = 'vshape-tracker-data.json';
 
-let driveAccessToken = null;
-let driveFileId = null;
-let driveSyncTimeout = null;
-let driveUserEmail = null;
+let driveAccessToken = null, driveFileId = null, driveSyncTimeout = null, driveUserEmail = null;
 
-// ── Auth ────────────────────────────────────────────────────
 function driveLogin() {
   if (typeof google === 'undefined' || !google.accounts) {
-    setDriveStatus('err', 'Cargando Google…', 'Espera unos segundos y vuelve a intentarlo');
-    setTimeout(driveLogin, 2000);
-    return;
+    setDriveStatus('err', 'Cargando Google…', 'Espera unos segundos');
+    setTimeout(driveLogin, 2000); return;
   }
   const client = google.accounts.oauth2.initTokenClient({
-    client_id: DRIVE_CLIENT_ID,
-    scope: DRIVE_SCOPE,
+    client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE,
     callback: async (resp) => {
       if (resp.error) { setDriveStatus('err', 'Error al autenticar', JSON.stringify(resp)); return; }
       driveAccessToken = resp.access_token;
-      // Get user info
       try {
-        const ui = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: 'Bearer ' + driveAccessToken }
-        });
-        const udata = await ui.json();
-        driveUserEmail = udata.email || '';
+        const ui = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + driveAccessToken } });
+        const udata = await ui.json(); driveUserEmail = udata.email || '';
       } catch(e) {}
       setDriveStatus('syncing', 'Conectando…');
       showDriveConnected();
@@ -1288,62 +1647,41 @@ function driveLogout() {
   driveAccessToken = null; driveFileId = null; driveUserEmail = null;
   setDriveStatus('', 'Sin conexión a Drive');
   document.getElementById('btn-drive-login').style.display = 'flex';
-  const logoutBtn = document.getElementById('btn-drive-logout');
-  if (logoutBtn) logoutBtn.remove();
+  const lb = document.getElementById('btn-drive-logout'); if (lb) lb.remove();
   document.getElementById('sync-dot').className = 'sync-dot';
 }
 
 function showDriveConnected() {
-  const loginBtn = document.getElementById('btn-drive-login');
-  loginBtn.style.display = 'none';
+  document.getElementById('btn-drive-login').style.display = 'none';
   if (!document.getElementById('btn-drive-logout')) {
-    const btn = document.createElement('button');
-    btn.id = 'btn-drive-logout';
-    btn.textContent = 'Desconectar';
-    btn.onclick = driveLogout;
+    const btn = document.createElement('button'); btn.id = 'btn-drive-logout';
+    btn.textContent = 'Desconectar'; btn.onclick = driveLogout;
+    btn.className = 'btn-drive-logout'; btn.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.3);padding:7px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Barlow,sans-serif';
     document.getElementById('drive-bar').appendChild(btn);
   }
 }
 
 function setDriveStatus(state, msg, detail) {
-  const el = document.getElementById('drive-status');
-  const dot = document.getElementById('sync-dot');
+  const el = document.getElementById('drive-status'), dot = document.getElementById('sync-dot');
   el.textContent = msg;
-  el.className = state ? 'ok' === state ? 'ok' : state : '';
-  dot.className = 'sync-dot' + (state ? ' ' + state : '');
+  el.className = state ? state : '';
+  dot.className = 'sync-dot' + (state ? ' '+state : '');
   const log = document.getElementById('drive-error-log');
   if (state === 'err' && log) {
     log.style.display = 'block';
-    const ts = new Date().toLocaleTimeString('es-ES');
-    log.textContent += '[' + ts + '] ' + msg + (detail ? ': ' + detail : '') + '\n';
-  } else if (state === 'ok' && log) {
-    log.style.display = 'none';
-    log.textContent = '';
-  }
+    log.textContent += '['+new Date().toLocaleTimeString('es-ES')+'] '+msg+(detail?': '+detail:'')+'\n';
+  } else if (state === 'ok' && log) { log.style.display = 'none'; log.textContent = ''; }
 }
 
-// ── Find or create file in Drive ────────────────────────────
 async function driveLoadOrCreate() {
   try {
-    // Search for existing file
     const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`, {
-      headers: { Authorization: 'Bearer ' + driveAccessToken }
-    });
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`, { headers: { Authorization: 'Bearer ' + driveAccessToken } });
     const data = await res.json();
     if (data.files && data.files.length > 0) {
-      driveFileId = data.files[0].id;
-      // Load remote data and merge
-      await drivePullAndMerge();
-    } else {
-      // Create new file
-      await driveCreateFile();
-      setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Drive conectado');
-    }
-  } catch(e) {
-    setDriveStatus('err', 'Error al conectar', e.message || String(e));
-    console.error('Drive error:', e);
-  }
+      driveFileId = data.files[0].id; await drivePullAndMerge();
+    } else { await driveCreateFile(); setDriveStatus('ok', driveUserEmail ? '✓ '+driveUserEmail : '✓ Drive conectado'); }
+  } catch(e) { setDriveStatus('err', 'Error al conectar', e.message||String(e)); }
 }
 
 async function driveCreateFile() {
@@ -1352,105 +1690,85 @@ async function driveCreateFile() {
   const form = new FormData();
   form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
   form.append('file', new Blob([body], {type:'application/json'}));
-  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + driveAccessToken },
-    body: form
-  });
-  const d = await res.json();
-  driveFileId = d.id;
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { Authorization: 'Bearer ' + driveAccessToken }, body: form });
+  const d = await res.json(); driveFileId = d.id;
 }
 
-// ── Pull remote → merge with local ─────────────────────────
 async function drivePullAndMerge() {
   setDriveStatus('syncing', 'Sincronizando…');
   try {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
-      headers: { Authorization: 'Bearer ' + driveAccessToken }
-    });
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, { headers: { Authorization: 'Bearer ' + driveAccessToken } });
     const remote = await res.json();
     const local = loadData();
-    // Merge: remote wins on conflict (most recent), local adds any keys not in remote
-    const merged = Object.assign({}, remote, local);
-    // For each key in both, keep whichever has more completed sets
+    const merged = { ...remote };
+    // Merge local keys not in remote
+    Object.keys(local).forEach(k => { if (!(k in merged)) merged[k] = local[k]; });
+    // Conflict resolution: prefer newer by lastModified, then by completed count
     Object.keys(remote).forEach(k => {
-      if (local[k] && remote[k]) {
-        // If both exist, take the one with more completed sets
-        const lc = local[k].completed ? local[k].completed.filter(Boolean).length : 0;
-        const rc = remote[k].completed ? remote[k].completed.filter(Boolean).length : 0;
-        merged[k] = rc >= lc ? remote[k] : local[k];
-      }
+      if (!local[k]) return;
+      const lt = local[k].lastModified || 0, rt = remote[k].lastModified || 0;
+      if (lt > rt) { merged[k] = local[k]; return; }
+      if (rt > lt) { merged[k] = remote[k]; return; }
+      const lc = local[k].completed ? local[k].completed.filter(Boolean).length : 0;
+      const rc = remote[k].completed ? remote[k].completed.filter(Boolean).length : 0;
+      merged[k] = rc >= lc ? remote[k] : local[k];
     });
-    saveData(merged);
-    renderDay();
+    saveData(merged); renderDay();
     await drivePush(merged);
-    setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Sincronizado');
-  } catch(e) {
-    setDriveStatus('err', 'Error al sincronizar', e.message || String(e));
-    console.error('Pull error:', e);
-  }
+    setDriveStatus('ok', driveUserEmail ? '✓ '+driveUserEmail : '✓ Sincronizado');
+  } catch(e) { setDriveStatus('err', 'Error al sincronizar', e.message||String(e)); }
 }
 
-// ── Push local → Drive ──────────────────────────────────────
 async function drivePush(data) {
   if (!driveAccessToken || !driveFileId) return;
   try {
     await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
       method: 'PATCH',
-      headers: {
-        Authorization: 'Bearer ' + driveAccessToken,
-        'Content-Type': 'application/json'
-      },
+      headers: { Authorization: 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
       body: JSON.stringify(data || loadData())
     });
-  } catch(e) {
-    console.error('Push error:', e);
-  }
+  } catch(e) { console.error('Drive push error:', e); }
 }
 
-// ── Auto-sync: debounced push after any data change ─────────
 function scheduleDriveSync(d) {
   if (driveAccessToken && driveFileId) {
     clearTimeout(driveSyncTimeout);
     setDriveStatus('syncing', 'Guardando…');
     driveSyncTimeout = setTimeout(async () => {
       await drivePush(d);
-      setDriveStatus('ok', driveUserEmail ? '✓ ' + driveUserEmail : '✓ Guardado en Drive');
+      setDriveStatus('ok', driveUserEmail ? '✓ '+driveUserEmail : '✓ Guardado en Drive');
     }, 1500);
   }
 }
 
-// ── Restore session on load if token persisted ──────────────
-// Silent re-auth on load - only if GSI is ready
 function trySilentAuth() {
   try {
-    if (typeof google === 'undefined' || !google.accounts) {
-      setTimeout(trySilentAuth, 500);
-      return;
-    }
+    if (typeof google === 'undefined' || !google.accounts) { setTimeout(trySilentAuth, 500); return; }
     const client = google.accounts.oauth2.initTokenClient({
-      client_id: DRIVE_CLIENT_ID,
-      scope: DRIVE_SCOPE,
-      prompt: '',
+      client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, prompt: '',
       callback: async (resp) => {
         if (resp && !resp.error) {
           driveAccessToken = resp.access_token;
-          showDriveConnected();
-          setDriveStatus('syncing', 'Reconectando…');
-          await driveLoadOrCreate();
+          try {
+            const ui = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + driveAccessToken } });
+            const ud = await ui.json(); driveUserEmail = ud.email || '';
+          } catch(e) {}
+          showDriveConnected(); setDriveStatus('syncing', 'Reconectando…'); await driveLoadOrCreate();
         }
       }
     });
     client.requestAccessToken({ prompt: '' });
   } catch(e) {}
 }
-window.addEventListener('load', () => setTimeout(trySilentAuth, 1000));
 
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
 renderDay();
 showView("entreno");
+renderBottomBar();
+setupSwipe();
+window.addEventListener('load', () => setTimeout(trySilentAuth, 1000));
 </script>
 </body>
 </html>

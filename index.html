@@ -2059,12 +2059,14 @@ function renderPlanEditor() {
           </div>
           <div class="plan-day-chevron" id="chevron-${dayKey}">▼</div>
         </div>
-        <div class="plan-day-body" id="plan-day-body-${dayKey}" style="display:none">
-        ${dayKey === 'Torso A' ? `
-          <div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;display:flex;align-items:center;gap:10px">
-            <span style="font-size:11px;color:rgba(255,215,0,0.8);flex:1;font-weight:600">⚠️ Intercambiar historial B1↔B2 (Elevaciones ↔ Remo)</span>
-            <button onclick="swapExerciseData('Torso A','B','B1','B2')" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.35);border-radius:8px;color:#FFD700;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0">Intercambiar</button>
-          </div>` : ''}`;
+        <div class="plan-day-body" id="plan-day-body-${dayKey}" style="display:none">`;
+
+    if (dayKey === 'Torso A') {
+      html += `<div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:rgba(255,215,0,0.8);flex:1;font-weight:600">⚠️ Intercambiar historial B1↔B2 (Elevaciones ↔ Remo)</span>
+        <button onclick="swapExerciseData('Torso A','B','B1','B2')" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.35);border-radius:8px;color:#FFD700;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0">Intercambiar</button>
+      </div>`;
+    }
 
     day.blocks.forEach((block, bi) => {
       html += `
@@ -2195,6 +2197,8 @@ function swapExerciseData(dayKey, blockId, exIdA, exIdB) {
   renderDay();
   showToast(`✓ Datos de ${exIdA} y ${exIdB} intercambiados`, '#4ade80');
 }
+
+function savePlanFromEditor() {
   if (!planDraft) return;
   PLAN = JSON.parse(JSON.stringify(planDraft));
   DAY_ORDER = Object.keys(PLAN);

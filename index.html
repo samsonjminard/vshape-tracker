@@ -245,6 +245,48 @@
   @keyframes fadeSlideIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
   .fade-in { animation: fadeSlideIn 0.25s ease; }
 
+  /* ── RPE INPUT ─────────────────────────────────────────── */
+  .col-headers { display: grid; grid-template-columns: 34px 1fr 16px 1fr 36px 48px; gap: 8px; margin-bottom: 2px; align-items: center; }
+  .set-row { display: grid; grid-template-columns: 34px 1fr 16px 1fr 36px 48px; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); transition: opacity 0.25s; }
+  .rpe-input { width: 36px; height: 44px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 700; text-align: center; padding: 0; outline: none; font-family: 'JetBrains Mono', monospace; }
+  .rpe-input:focus { border-color: rgba(255,255,255,0.28); color: #fff; }
+  .rpe-input:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ── SUGGESTION CHIP ───────────────────────────────────── */
+  .suggest-chip { display: flex; align-items: center; gap: 7px; background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.22); border-radius: 10px; padding: 7px 11px; margin-bottom: 9px; font-size: 12px; color: rgba(251,191,36,0.9); font-weight: 600; line-height: 1.4; }
+  .suggest-chip strong { font-weight: 800; color: #fbbf24; }
+
+  /* ── PR BADGE ──────────────────────────────────────────── */
+  .pr-badge { display: inline-flex; align-items: center; gap: 3px; background: rgba(255,215,0,0.14); border: 1px solid rgba(255,215,0,0.35); border-radius: 6px; padding: 2px 6px; font-size: 10px; font-weight: 800; color: #FFD700; letter-spacing: 0.5px; vertical-align: middle; margin-left: 5px; }
+  @keyframes prPop { 0%{transform:scale(0.7);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  .pr-badge-anim { animation: prPop 0.35s ease; }
+
+  /* ── WEEK DOTS ─────────────────────────────────────────── */
+  #week-dots { display: flex; gap: 4px; align-items: flex-start; padding: 14px 20px 0; }
+  .wdot-item { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .wdot-circle { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; transition: all 0.3s; }
+  .wdot-label { font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.22); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wdot-today .wdot-circle { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.08); }
+  .wdot-today .wdot-label { color: rgba(255,255,255,0.55); }
+
+  /* ── NEXT SESSION BAR ──────────────────────────────────── */
+  #next-session-bar { margin: 12px 20px 0; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 13px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .nsess-lbl { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.22); flex-shrink: 0; }
+  .nsess-chip { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 100px; border-width: 1px; border-style: solid; white-space: nowrap; }
+
+  /* ── SESSION NOTES ─────────────────────────────────────── */
+  #session-notes-wrap { padding: 8px 20px 24px; }
+  .session-notes-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.22); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+  #session-notes-ta { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; color: rgba(255,255,255,0.7); font-size: 13px; padding: 12px 14px; outline: none; resize: none; line-height: 1.55; min-height: 80px; font-family: 'Barlow', sans-serif; }
+  #session-notes-ta:focus { border-color: rgba(255,255,255,0.18); }
+
+  /* ── SS ROUND INDICATOR ────────────────────────────────── */
+  .ss-round { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 100px; padding: 2px 8px; margin-left: 6px; font-family: 'JetBrains Mono', monospace; transition: all 0.3s; }
+  .ss-round.active { color: #fff; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+
+  /* ── VOLUME CHART ──────────────────────────────────────── */
+  canvas.vol-chart { width: 100%; height: 130px; display: block; }
+
   /* ── MISC ─────────────────────────────────────────────── */
   .section-sep { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0 20px; }
 </style>
@@ -271,6 +313,8 @@
 
   <!-- ENTRENAMIENTO VIEW -->
   <div id="entreno-view">
+    <div id="week-dots"></div>
+    <div id="next-session-bar" style="display:none"></div>
     <div id="header">
       <div id="header-top">
         <div>
@@ -310,6 +354,10 @@
       <button id="btn-rt-finish" onclick="finishRoutine()">Finalizar</button>
     </div>
     <div id="blocks"></div>
+    <div id="session-notes-wrap">
+      <div class="session-notes-lbl">📝 Notas de la sesión</div>
+      <textarea id="session-notes-ta" placeholder="Sensaciones generales, energía, notas del día…" oninput="saveSessionNote(activeDay, this.value)"></textarea>
+    </div>
   </div>
 
   <!-- PROGRESO VIEW -->
@@ -1040,6 +1088,267 @@ function drawDayProgressChart(canvas, series) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════
+// 1RM ESTIMATION (Epley)
+// ═══════════════════════════════════════════════════════════
+function estimateOneRM(weight, reps) {
+  if (!weight || !reps || reps <= 0) return 0;
+  if (reps === 1) return weight;
+  return parseFloat((weight * (1 + reps / 30)).toFixed(1));
+}
+function getBestOneRM(dayKey, blockId, exId) {
+  const history = getExerciseHistory(dayKey, blockId, exId);
+  let best = 0;
+  history.forEach(h => {
+    h.sets.forEach(s => {
+      const orm = estimateOneRM(s.weight, s.reps);
+      if (orm > best) best = orm;
+    });
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESSION SUGGESTION
+// ═══════════════════════════════════════════════════════════
+function getSuggestion(dayKey, blockId, exId, targetRepsLabel) {
+  const last = getLastSessionExData(dayKey, blockId, exId);
+  if (!last || !last.sets) return null;
+  const completedSets = last.sets.filter((s, i) => last.completed && last.completed[i]);
+  if (!completedSets.length || completedSets.length < last.sets.length) return null;
+  const weights = completedSets.map(s => parseFloat(s.weight)).filter(w => w > 0);
+  const reps = completedSets.map(s => parseFloat(s.reps)).filter(r => r > 0);
+  if (!weights.length || !reps.length) return null;
+  const avgW = weights.reduce((a,b)=>a+b,0)/weights.length;
+  const avgR = reps.reduce((a,b)=>a+b,0)/reps.length;
+  // Extract minimum target reps from label (e.g. "10-12" → 10, "8" → 8, "Fallo" → skip)
+  const targetMatch = targetRepsLabel.match(/(\d+)/);
+  const targetMin = targetMatch ? parseInt(targetMatch[1]) : null;
+  if (!targetMin) return null;
+  if (avgR >= targetMin) {
+    return { suggestWeight: parseFloat((avgW + 2.5).toFixed(1)), lastWeight: avgW, lastReps: Math.round(avgR) };
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PR DETECTION
+// ═══════════════════════════════════════════════════════════
+function getAllTimeMaxWeight(dayKey, blockId, exId) {
+  const all = loadData();
+  const suffix = `_${dayKey}_${blockId}_${exId}`;
+  const today = todayStr();
+  let maxW = 0;
+  Object.entries(all).forEach(([key, val]) => {
+    if (!key.endsWith(suffix)) return;
+    const date = key.slice(0, key.length - suffix.length);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date >= today) return;
+    if (!val.sets) return;
+    val.sets.forEach((s, i) => {
+      if (val.completed && val.completed[i]) {
+        const w = parseFloat(s.weight) || 0;
+        if (w > maxW) maxW = w;
+      }
+    });
+  });
+  return maxW;
+}
+
+// ═══════════════════════════════════════════════════════════
+// WEEKLY VOLUME HISTORY
+// ═══════════════════════════════════════════════════════════
+function getWeeklyVolumeHistory(dayKey) {
+  const all = loadData();
+  const day = PLAN[dayKey];
+  const weeks = {};
+  day.blocks.forEach(block => {
+    block.exercises.forEach(ex => {
+      const suffix = `_${dayKey}_${block.id}_${ex.id}`;
+      Object.entries(all).forEach(([key, val]) => {
+        if (!key.endsWith(suffix)) return;
+        const date = key.slice(0, key.length - suffix.length);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+        if (!val.completed || !val.sets) return;
+        const d = new Date(date + 'T12:00:00');
+        const dow = d.getDay();
+        const diff = dow === 0 ? -6 : 1 - dow;
+        const mon = new Date(d); mon.setDate(d.getDate() + diff);
+        const wk = mon.toISOString().split('T')[0];
+        if (!weeks[wk]) weeks[wk] = 0;
+        val.sets.forEach((s, i) => {
+          if (val.completed[i]) weeks[wk] += (parseFloat(s.weight)||0) * (parseFloat(s.reps)||0);
+        });
+      });
+    });
+  });
+  return Object.entries(weeks)
+    .map(([week, vol]) => ({ week, vol: Math.round(vol) }))
+    .sort((a, b) => a.week.localeCompare(b.week));
+}
+
+function drawWeeklyVolumeChart(canvas, weeklyData, color) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight || 130;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const pad = { top: 14, right: 16, bottom: 28, left: 52 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  const vals = weeklyData.map(w => w.vol);
+  const maxV = Math.max(...vals) * 1.12 || 1;
+  const xOf = i => pad.left + (i / (weeklyData.length - 1 || 1)) * cw;
+  const yOf = v => pad.top + ch - (v / maxV) * ch;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.top + (ch / 3) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const gv = maxV - (maxV / 3) * i;
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.font = "600 9px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'right';
+    ctx.fillText(gv >= 1000 ? (gv/1000).toFixed(1)+'t' : Math.round(gv)+'kg', pad.left - 5, y + 4);
+  }
+
+  if (weeklyData.length === 1) {
+    const bW = 40, x = W / 2 - bW / 2, y = yOf(vals[0]);
+    ctx.fillStyle = hex2rgb(color, 0.7); ctx.beginPath(); ctx.roundRect(x, y, bW, pad.top+ch-y, 4); ctx.fill();
+    return;
+  }
+
+  // Bars
+  const barW = Math.max(4, Math.min(28, cw / weeklyData.length - 6));
+  weeklyData.forEach((w, i) => {
+    const x = xOf(i) - barW / 2, y = yOf(w.vol), h = pad.top + ch - y;
+    const isLast = i === weeklyData.length - 1;
+    const grad = ctx.createLinearGradient(0, y, 0, pad.top + ch);
+    grad.addColorStop(0, hex2rgb(color, isLast ? 0.85 : 0.45));
+    grad.addColorStop(1, hex2rgb(color, isLast ? 0.35 : 0.15));
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(x, y, barW, h, [4, 4, 0, 0]); ctx.fill();
+    if (isLast) {
+      ctx.fillStyle = color; ctx.font = "700 9px 'JetBrains Mono', monospace"; ctx.textAlign = 'center';
+      ctx.fillText(w.vol >= 1000 ? (w.vol/1000).toFixed(1)+'t' : w.vol+'kg', xOf(i), y - 5);
+    }
+    // Week label (only show first and last)
+    if (i === 0 || isLast) {
+      const d = new Date(w.week + 'T12:00:00');
+      ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.font = "600 8px 'Barlow', sans-serif"; ctx.textAlign = 'center';
+      ctx.fillText(d.toLocaleDateString('es-ES', {day:'numeric',month:'short'}), xOf(i), H - 5);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// WEEK DOTS
+// ═══════════════════════════════════════════════════════════
+function renderWeekDots() {
+  const labels = ['L','M','X','J','V','S','D'];
+  const today = new Date();
+  const dow = today.getDay();
+  const monOffset = dow === 0 ? -6 : 1 - dow;
+  const allData = loadData();
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + monOffset + i);
+    const dateStr = d.toISOString().split('T')[0];
+    const isToday = dateStr === todayStr();
+    let trainedColor = null;
+    DAY_ORDER.forEach(dk => {
+      const prefix = 'session_' + dk.replace(/ /g,'_') + '_';
+      if (allData[prefix + dateStr]) trainedColor = PLAN[dk].color;
+    });
+    const circleStyle = trainedColor
+      ? `background:${trainedColor};border-color:${trainedColor};box-shadow:0 0 7px ${hex2rgb(trainedColor,0.5)};color:#000`
+      : '';
+    html += `<div class="wdot-item${isToday?' wdot-today':''}">
+      <div class="wdot-circle" style="${circleStyle}">${trainedColor ? '✓' : (isToday ? '◦' : '')}</div>
+      <div class="wdot-label">${labels[i]}</div>
+    </div>`;
+  }
+  const el = document.getElementById('week-dots');
+  if (el) el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEXT SESSION BAR
+// ═══════════════════════════════════════════════════════════
+function renderNextSessionBar() {
+  const allData = loadData();
+  const today = todayStr();
+  const lastDates = {};
+  DAY_ORDER.forEach(dayKey => {
+    const prefix = 'session_' + dayKey.replace(/ /g,'_') + '_';
+    let last = null;
+    Object.keys(allData).forEach(k => {
+      if (!k.startsWith(prefix)) return;
+      const date = k.replace(prefix, '');
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date) && (!last || date > last)) last = date;
+    });
+    if (last) lastDates[dayKey] = last;
+  });
+  const bar = document.getElementById('next-session-bar');
+  if (!bar || !Object.keys(lastDates).length) { if (bar) bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  let html = `<span class="nsess-lbl">Descansado</span>`;
+  DAY_ORDER.forEach(dayKey => {
+    if (!(dayKey in lastDates)) return;
+    const days = Math.floor((new Date(today) - new Date(lastDates[dayKey])) / 86400000);
+    const color = PLAN[dayKey].color;
+    const urgency = days >= 7 ? '#f87171' : days >= 5 ? '#fbbf24' : color;
+    const short = PLAN[dayKey].label.replace('TORSO ','T').replace('PIERNA ','P');
+    html += `<span class="nsess-chip" style="background:${hex2rgb(urgency,0.1)};border-color:${hex2rgb(urgency,0.28)};color:${urgency}">${short} · ${days}d</span>`;
+  });
+  bar.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SESSION NOTES
+// ═══════════════════════════════════════════════════════════
+function saveSessionNote(dayKey, val) {
+  const d = loadData();
+  d[`sessionnote_${dayKey.replace(/ /g,'_')}_${todayStr()}`] = { note: val, date: todayStr() };
+  saveData(d);
+}
+function loadSessionNote(dayKey) {
+  const d = loadData();
+  const key = `sessionnote_${dayKey.replace(/ /g,'_')}_${todayStr()}`;
+  return (d[key] && d[key].note) || '';
+}
+
+// ═══════════════════════════════════════════════════════════
+// RPE SAVE
+// ═══════════════════════════════════════════════════════════
+function saveRpe(dayKey, blockId, exId, setIdx, numSets, val) {
+  const data = getExData(dayKey, blockId, exId, numSets);
+  if (!data.sets[setIdx]) data.sets[setIdx] = {};
+  data.sets[setIdx].rpe = val;
+  setExData(dayKey, blockId, exId, data);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SS ROUND UPDATER
+// ═══════════════════════════════════════════════════════════
+function updateSSRound(dayKey, blockId, block) {
+  const el = document.getElementById(`ss-round-${dayKey}-${blockId}`);
+  if (!el) return;
+  const numSets = block.exercises[0].sets;
+  let minDone = numSets;
+  block.exercises.forEach(ex => {
+    const data = getExData(dayKey, blockId, ex.id, numSets);
+    const done = data.completed.filter(Boolean).length;
+    if (done < minDone) minDone = done;
+  });
+  const currentRound = Math.min(minDone + 1, numSets);
+  const allDone = block.exercises.every(ex => getExData(dayKey, blockId, ex.id, numSets).completed.every(Boolean));
+  if (allDone) {
+    el.textContent = `✓ ${numSets}/${numSets}`;
+    el.classList.add('active');
+  } else {
+    el.textContent = `${currentRound}/${numSets}`;
+    el.classList.toggle('active', currentRound > 1);
+  }
+}
+
 function renderProgreso() {
   const container = document.getElementById("progreso-view");
   let anyData = false, html = "";
@@ -1070,7 +1379,31 @@ function renderProgreso() {
       </div>`;
   }
 
-  // ── Una tarjeta por día con gráfica multi-línea de pesos ───
+  // ── Volumen semanal por día ────────────────────────────────
+  const volSeries = DAY_ORDER.map(dayKey => ({
+    dayKey, color: PLAN[dayKey].color, label: PLAN[dayKey].label,
+    data: getWeeklyVolumeHistory(dayKey)
+  })).filter(s => s.data.length > 0);
+
+  if (volSeries.length > 0) {
+    anyData = true;
+    const volLegend = volSeries.map(s => `
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:${s.color};background:${hex2rgb(s.color,0.09)};border:1px solid ${hex2rgb(s.color,0.22)};border-radius:100px;padding:3px 8px">
+        <span style="width:5px;height:5px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.label}
+      </span>`).join('');
+    html += `
+      <div style="padding:16px 0 8px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">📦 Volumen semanal</div>
+      <div class="prog-session-card">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${volLegend}</div>
+        ${volSeries.map(s => `
+          <div style="margin-bottom:14px">
+            <div style="font-size:10px;font-weight:800;color:${s.color};letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">${s.label} <span style="color:rgba(255,255,255,0.25);font-weight:400">(${s.data.length} sem.)</span></div>
+            <canvas id="volchart-${s.dayKey.replace(/ /g,'_')}" class="vol-chart"></canvas>
+          </div>`).join('')}
+      </div>`; 
+  }
+
+  // ── Una tarjeta por día con gráfica + 1RM ─────────────────
   const daySeries = {}; // dayKey → [{name, id, color, history}]
 
   DAY_ORDER.forEach(dayKey => {
@@ -1082,7 +1415,7 @@ function renderProgreso() {
         if (!history.length) return;
         anyData = true;
         const color = EX_LINE_COLORS[(bi * 2 + ei) % EX_LINE_COLORS.length];
-        daySeries[dayKey].push({ name: ex.name, id: ex.id, color, history });
+        daySeries[dayKey].push({ name: ex.name, id: ex.id, blockId: block.id, exId: ex.id, color, history });
       });
     });
   });
@@ -1099,17 +1432,19 @@ function renderProgreso() {
         <span style="width:5px;height:5px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.id} ${s.name}
       </span>`).join('');
 
-    // Last session detail row (last entry only)
+    // Last session detail + 1RM
     const lastSessionChips = series.map(s => {
       const lastH = [...s.history].reverse()[0];
       if (!lastH) return '';
+      const orm = getBestOneRM(dayKey, s.blockId, s.exId);
+      const ormBadge = orm > 0 ? `<span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px 6px;margin-left:5px">~${orm}kg 1RM</span>` : '';
       const chipContent = lastH.isBodyweight
         ? lastH.sets.map(set => `${set.reps||'?'}r`).join(' · ')
-        : lastH.sets.filter(set => set.weight > 0).map(set => `${set.weight}×${set.reps}`).join(' · ');
+        : lastH.sets.filter(set => set.weight > 0).map(set => `${set.weight}×${set.reps}${set.rpe ? ` @${set.rpe}` : ''}`).join(' · ');
       if (!chipContent) return '';
       return `<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px">
         <span style="font-size:9px;font-weight:700;color:${s.color};letter-spacing:0.5px;flex-shrink:0;min-width:28px">${s.id}</span>
-        <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.55)">${chipContent}</span>
+        <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.55)">${chipContent}</span>${ormBadge}
       </div>`;
     }).filter(Boolean).join('');
 
@@ -1143,6 +1478,11 @@ function renderProgreso() {
 
   if (anyData) {
     requestAnimationFrame(() => {
+      // Volume charts
+      volSeries.forEach(s => {
+        const c = document.getElementById(`volchart-${s.dayKey.replace(/ /g,'_')}`);
+        if (c) drawWeeklyVolumeChart(c, s.data, s.color);
+      });
       // Duration combined chart
       const combinedCanvas = document.getElementById('sess-chart-combined');
       if (combinedCanvas && allSessData.length > 0) drawMultiTimeChart(combinedCanvas, allSessData);
@@ -1198,6 +1538,8 @@ function finishRoutine() {
   document.getElementById('rt-time').textContent = '00:00';
   document.getElementById('btn-start-routine').style.display = 'flex';
   showToast('Sesión guardada · ' + fmtDuration(elapsed), PLAN[activeDay].color);
+  renderWeekDots();
+  renderNextSessionBar();
 }
 
 function resetRoutineTimer() {
@@ -1325,24 +1667,38 @@ function handleCheck(btn) {
 }
 
 function checkSet(dayKey, blockId, exId, setIdx, numSets, restDuration, color, isSS, blockExIds) {
+  const prMaxBefore = getAllTimeMaxWeight(dayKey, blockId, exId);
   const data = getExData(dayKey, blockId, exId, numSets);
   for (let i = 0; i < numSets; i++) {
     const wEl = document.getElementById(`inp-w-${dayKey}-${blockId}-${exId}-${i}`);
     const rEl = document.getElementById(`inp-r-${dayKey}-${blockId}-${exId}-${i}`);
+    const rpeEl = document.getElementById(`inp-rpe-${dayKey}-${blockId}-${exId}-${i}`);
     if (wEl) data.sets[i].weight = wEl.value;
     if (rEl) data.sets[i].reps = rEl.value;
+    if (rpeEl) data.sets[i].rpe = rpeEl.value;
   }
   data.completed[setIdx] = true;
+  data.prefilled = false;
   setExData(dayKey, blockId, exId, data);
   renderSetRow(dayKey, blockId, exId, setIdx, data, color);
   playCheckSound();
 
+  // PR detection
+  const thisWeight = parseFloat(data.sets[setIdx]?.weight) || 0;
+  if (thisWeight > 0 && thisWeight > prMaxBefore) {
+    setTimeout(() => showToast(`🏆 ¡Nuevo récord! ${thisWeight}kg en ${exId}`, '#FFD700'), 200);
+  }
+
+  // SS: check all exercises done this round
   if (isSS) {
     const allRoundDone = blockExIds.every(eid => {
       const d = getExData(dayKey, blockId, eid, numSets);
       return d.completed[setIdx] === true;
     });
     if (allRoundDone) startTimer(`timer-block-${dayKey}-${blockId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
+    // Update round badge
+    const block = PLAN[dayKey].blocks.find(b => b.id === blockId);
+    if (block) updateSSRound(dayKey, blockId, block);
   } else {
     startTimer(`timer-${dayKey}-${blockId}-${exId}-${setIdx}`, restDuration, color, `timerbox-block-${dayKey}-${blockId}`);
   }
@@ -1363,16 +1719,23 @@ function renderSetRow(dayKey, blockId, exId, setIdx, data, color) {
   if (!row) return;
   row.className = "set-row" + (done ? " done" : "");
   const numEl = row.querySelector(".set-num");
+  const prMax = done ? getAllTimeMaxWeight(dayKey, blockId, exId) : 0;
+  const thisW = parseFloat(data.sets[setIdx]?.weight) || 0;
+  const isPR = done && prMax > 0 && thisW > prMax;
   if (done) {
-    numEl.innerHTML = SVG_CHECK_SM;
-    numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all 0.2s;flex-shrink:0;color:${color};border:1.5px solid ${color};background:${hex2rgb(color,0.12)}`;
+    numEl.innerHTML = isPR ? '🏆' : SVG_CHECK_SM;
+    numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all 0.2s;flex-shrink:0;color:${isPR?'#FFD700':color};border:1.5px solid ${isPR?'#FFD700':color};background:${isPR?'rgba(255,215,0,0.12)':hex2rgb(color,0.12)}`;
   } else {
     numEl.textContent = setIdx+1;
     numEl.style.cssText = `width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:all 0.2s;flex-shrink:0;color:rgba(255,255,255,0.4);border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.07)`;
   }
-  const wInp = row.querySelector(".inp-w"), rInp = row.querySelector(".inp-r"), btn = row.querySelector(".btn-check");
+  const wInp = row.querySelector(".inp-w");
+  const rInp = row.querySelector(".inp-r");
+  const rpeInp = row.querySelector(".rpe-input");
+  const btn = row.querySelector(".btn-check");
   if (wInp) wInp.disabled = done;
   if (rInp) rInp.disabled = done;
+  if (rpeInp) rpeInp.disabled = done;
   if (btn) {
     btn.style.background = done ? hex2rgb(color,0.1) : color;
     btn.style.color = done ? color : "#000";
@@ -1427,27 +1790,39 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
   const nameColor = allDone ? "rgba(255,255,255,0.35)" : "#fff";
   const repsColor = allDone ? "rgba(255,255,255,0.2)" : color;
 
+  // Suggestion chip
+  const suggestion = getSuggestion(dayKey, block.id, ex.id, ex.repsLabel);
+  const suggestionHtml = suggestion && !allDone
+    ? `<div class="suggest-chip">💡 Prueba <strong>${suggestion.suggestWeight}kg</strong> hoy · último: ${suggestion.lastWeight}kg × ${suggestion.lastReps} reps</div>`
+    : '';
+
+  // PR tracking: all-time max weight from previous sessions
+  const prMax = getAllTimeMaxWeight(dayKey, block.id, ex.id);
+
   let setRowsHTML = "";
   for (let i = 0; i < ex.sets; i++) {
     const done = data.completed[i];
-    const w = data.sets[i]?.weight||"", r = data.sets[i]?.reps||"";
+    const w = data.sets[i]?.weight||"", r = data.sets[i]?.reps||"", rpe = data.sets[i]?.rpe||"";
+    const isPR = done && prMax > 0 && parseFloat(w) > prMax;
     const numStyle = done
-      ? `color:${color};border-color:${color};background:${hex2rgb(color,0.12)}`
+      ? `color:${isPR?'#FFD700':color};border-color:${isPR?'#FFD700':color};background:${isPR?'rgba(255,215,0,0.12)':hex2rgb(color,0.12)}`
       : `color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.07)`;
     const btnBg = done ? hex2rgb(color,0.1) : color;
     const btnColor = done ? color : "#000";
+    const prBadge = isPR ? `<span class="pr-badge pr-badge-anim">🏆 PR</span>` : '';
     setRowsHTML += `
       <div id="set-row-${dayKey}-${block.id}-${ex.id}-${i}" class="set-row${done?" done":""}" role="row">
-        <div class="set-num" style="${numStyle}">${done?SVG_CHECK_SM:(i+1)}</div>
+        <div class="set-num" style="${numStyle}">${done?(isPR?'🏆':SVG_CHECK_SM):(i+1)}</div>
         <input id="inp-w-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-w" type="number" placeholder="kg"
-          value="${w}" ${done?"disabled":""} autocomplete="off"
-          aria-label="Peso serie ${i+1}"
+          value="${w}" ${done?"disabled":""} autocomplete="off" aria-label="Peso serie ${i+1}"
           oninput="saveWeight('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
         <span class="set-sep" aria-hidden="true">×</span>
         <input id="inp-r-${dayKey}-${block.id}-${ex.id}-${i}" class="set-input inp-r" type="number" placeholder="reps"
-          value="${r}" ${done?"disabled":""} autocomplete="off"
-          aria-label="Reps serie ${i+1}"
+          value="${r}" ${done?"disabled":""} autocomplete="off" aria-label="Reps serie ${i+1}"
           oninput="saveReps('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
+        <input id="inp-rpe-${dayKey}-${block.id}-${ex.id}-${i}" class="rpe-input" type="number" min="1" max="10"
+          placeholder="—" value="${rpe}" ${done?"disabled":""} autocomplete="off" aria-label="RPE serie ${i+1}"
+          oninput="saveRpe('${dayKey}','${block.id}','${ex.id}',${i},${ex.sets},this.value)">
         <button class="btn-check" ${done?"disabled":""} aria-label="Completar serie ${i+1}"
           style="background:${btnBg};color:${btnColor};box-shadow:${done?"none":`0 3px 12px ${hex2rgb(color,0.27)}`};cursor:${done?"default":"pointer"}"
           data-day="${dayKey}" data-block="${block.id}" data-ex="${ex.id}" data-set="${i}"
@@ -1456,7 +1831,7 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
           onclick="handleCheck(this)">
           ${SVG_CHECK}
         </button>
-      </div>`;
+      </div>${prBadge?`<div style="padding:3px 0 6px;padding-left:42px">${prBadge}</div>`:''}`;
   }
 
   const prefillBadge = data.prefilled
@@ -1478,8 +1853,9 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
         placeholder="Notas libres: sensaciones, técnica, ajuste de peso..."
         oninput="saveNote('${dayKey}','${block.id}','${ex.id}',${ex.sets},this.value)">${data.notes}</textarea>
       <div class="col-headers" role="row">
-        <div></div><div class="col-hdr">PESO (kg)</div><div></div><div class="col-hdr">REPS</div><div class="col-hdr">✓</div>
+        <div></div><div class="col-hdr">PESO (kg)</div><div></div><div class="col-hdr">REPS</div><div class="col-hdr">RPE</div><div class="col-hdr">✓</div>
       </div>
+      ${suggestionHtml}
       ${setRowsHTML}
       <div id="done-badge-${dayKey}-${block.id}-${ex.id}" class="done-badge" style="display:${allDone?"flex":"none"};color:${color}">
         ${SVG_CHECK_SM} Ejercicio completado
@@ -1492,8 +1868,22 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
 // ═══════════════════════════════════════════════════════════
 function renderBlock(block, dayKey, color) {
   const isSS = block.ss;
+  const numSets = block.exercises[0]?.sets || 3;
+  let roundBadge = '';
+  if (isSS) {
+    let minDone = numSets;
+    block.exercises.forEach(ex => {
+      const data = getExData(dayKey, block.id, ex.id, numSets);
+      const done = data.completed.filter(Boolean).length;
+      if (done < minDone) minDone = done;
+    });
+    const allBlockDone = block.exercises.every(ex => getExData(dayKey, block.id, ex.id, numSets).completed.every(Boolean));
+    const roundNum = allBlockDone ? numSets : Math.min(minDone + 1, numSets);
+    const isActive = minDone > 0 || allBlockDone;
+    roundBadge = `<span id="ss-round-${dayKey}-${block.id}" class="ss-round${isActive?' active':''}">${allBlockDone?`✓ ${numSets}/${numSets}`:`${roundNum}/${numSets}`}</span>`;
+  }
   const headerHTML = isSS
-    ? `<div class="ss-badge" style="background:${hex2rgb(color,0.094)};border-color:${hex2rgb(color,0.267)}">${SVG_ZAP}<span class="ss-badge-txt" style="color:${color}">Súper Serie ${block.id} · ${block.rest}s descanso</span></div>`
+    ? `<div class="ss-badge" style="background:${hex2rgb(color,0.094)};border-color:${hex2rgb(color,0.267)}">${SVG_ZAP}<span class="ss-badge-txt" style="color:${color}">Súper Serie ${block.id} · ${block.rest}s descanso</span>${roundBadge}</div>`
     : `<span class="block-lbl">Bloque ${block.id} · ${block.rest}s descanso</span>`;
   let exercisesHTML = "";
   block.exercises.forEach((ex,i) => {
@@ -1529,6 +1919,12 @@ function renderDay() {
   document.getElementById("blocks").innerHTML = day.blocks.map(b => renderBlock(b, activeDay, color)).join("");
   updateProgress();
   updateNavStyle();
+  renderWeekDots();
+  renderNextSessionBar();
+
+  // Load session notes for today
+  const ta = document.getElementById('session-notes-ta');
+  if (ta) ta.value = loadSessionNote(activeDay);
 
   const startBtn = document.getElementById('btn-start-routine');
   if (startBtn && !routineInterval) {

@@ -32,7 +32,7 @@
 
   /* ── MAIN NAV ─────────────────────────────────────────── */
   #main-nav {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 6px; padding: 20px 20px 0;
   }
   .main-nav-btn {
@@ -287,6 +287,39 @@
   /* ── VOLUME CHART ──────────────────────────────────────── */
   canvas.vol-chart { width: 100%; height: 130px; display: block; }
 
+  /* ── COACH IA ──────────────────────────────────────────── */
+  #coach-view { display: none; flex-direction: column; height: calc(100vh - 180px); padding: 0; }
+  #coach-header { padding: 16px 20px 12px; flex-shrink: 0; }
+  #coach-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  #coach-status-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); flex-shrink: 0; transition: all 0.4s; }
+  #coach-status-dot.ready { background: #4ade80; box-shadow: 0 0 7px #4ade80; }
+  #coach-status-dot.thinking { background: #fbbf24; animation: pulse 1s infinite; }
+  #coach-status-dot.error { background: #f87171; }
+  #coach-title { font-size: 22px; font-weight: 900; }
+  #coach-subtitle { font-size: 12px; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
+  #worker-url-wrap { display: flex; gap: 8px; align-items: center; }
+  #worker-url-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 11px; padding: 8px 12px; outline: none; font-family: 'JetBrains Mono', monospace; }
+  #worker-url-input:focus { border-color: rgba(255,255,255,0.3); }
+  #worker-url-input.ok { border-color: rgba(74,222,128,0.4); }
+  #btn-save-worker { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); border-radius: 10px; color: #4ade80; padding: 8px 14px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  #coach-messages { flex: 1; overflow-y: auto; padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+  .coach-msg { max-width: 88%; padding: 12px 15px; border-radius: 16px; font-size: 13px; line-height: 1.6; }
+  .coach-msg.user { align-self: flex-end; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px 16px 4px 16px; color: #fff; }
+  .coach-msg.assistant { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px 16px 16px 16px; color: rgba(255,255,255,0.88); }
+  .coach-msg.system { align-self: center; background: transparent; border: none; color: rgba(255,255,255,0.25); font-size: 11px; text-align: center; max-width: 100%; padding: 4px 0; }
+  .coach-msg.thinking-bubble { align-self: flex-start; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 4px 16px 16px 16px; color: rgba(255,255,255,0.3); font-size: 13px; }
+  .coach-msg strong { font-weight: 800; color: #fff; }
+  .coach-msg ul, .coach-msg ol { padding-left: 18px; margin: 6px 0; }
+  .coach-msg li { margin-bottom: 3px; }
+  #coach-input-wrap { padding: 10px 20px 12px; flex-shrink: 0; display: flex; gap: 8px; align-items: flex-end; border-top: 1px solid rgba(255,255,255,0.07); }
+  #coach-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; color: #fff; font-size: 14px; padding: 12px 14px; outline: none; resize: none; line-height: 1.5; font-family: 'Barlow', sans-serif; max-height: 120px; overflow-y: auto; }
+  #coach-input:focus { border-color: rgba(255,255,255,0.25); }
+  #btn-coach-send { width: 44px; height: 44px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; transition: all 0.2s; }
+  #btn-coach-send:disabled { opacity: 0.35; cursor: default; }
+  .coach-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 20px 4px; flex-shrink: 0; }
+  .coach-chip { font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .coach-chip:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
+
   /* ── MISC ─────────────────────────────────────────────── */
   .section-sep { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0 20px; }
 </style>
@@ -306,9 +339,10 @@
   </div>
 
   <div id="main-nav">
-    <button id="nav-entreno" class="main-nav-btn" onclick="showView('entreno')">🏋️ Entreno</button>
+    <button id="nav-entreno"  class="main-nav-btn" onclick="showView('entreno')">🏋️ Entreno</button>
     <button id="nav-progreso" class="main-nav-btn" onclick="showView('progreso')">📈 Progreso</button>
-    <button id="nav-plan" class="main-nav-btn" onclick="showView('plan')">✏️ Plan</button>
+    <button id="nav-plan"     class="main-nav-btn" onclick="showView('plan')">✏️ Plan</button>
+    <button id="nav-coach"    class="main-nav-btn" onclick="showView('coach')">🤖 Coach</button>
   </div>
 
   <!-- ENTRENAMIENTO VIEW -->
@@ -375,9 +409,30 @@
     <div id="plan-editor-content"></div>
     <button class="plan-save-btn" id="plan-save-btn" onclick="savePlanFromEditor()">Guardar Plan</button>
   </div>
+  <!-- COACH IA VIEW -->
+  <div id="coach-view">
+    <div id="coach-header">
+      <div id="coach-title-row">
+        <div id="coach-status-dot"></div>
+        <div id="coach-title">Coach IA</div>
+      </div>
+      <div id="coach-subtitle">Asistente personal · Conoce tu historial completo</div>
+      <div id="worker-url-wrap">
+        <input id="worker-url-input" placeholder="https://tu-worker.workers.dev" autocomplete="off" spellcheck="false">
+        <button id="btn-save-worker" onclick="saveWorkerUrl()">Guardar</button>
+      </div>
+    </div>
+    <div class="coach-chips" id="coach-chips"></div>
+    <div id="coach-messages"></div>
+    <div id="coach-input-wrap">
+      <textarea id="coach-input" placeholder="Pregunta algo sobre tu entrenamiento…" rows="1"
+        onkeydown="coachKeydown(event)" oninput="autoResizeCoachInput()"></textarea>
+      <button id="btn-coach-send" onclick="coachSend()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
 </div>
-
-<div id="bottom-bar">
   <div id="bottom-bar-inner" onclick="openProfileModal()" aria-label="Editar perfil" role="button" tabindex="0">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 9a6 6 0 0 0 12 0"/>
@@ -973,13 +1028,20 @@ let currentView = "entreno";
 
 function showView(view) {
   currentView = view;
-  const views = { entreno: 'entreno-view', progreso: 'progreso-view', plan: 'plan-view' };
+  const views = { entreno: 'entreno-view', progreso: 'progreso-view', plan: 'plan-view', coach: 'coach-view' };
   Object.entries(views).forEach(([k,id]) => {
-    document.getElementById(id).style.display = k === view ? 'block' : 'none';
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (k === 'coach') {
+      el.style.display = k === view ? 'flex' : 'none';
+    } else {
+      el.style.display = k === view ? 'block' : 'none';
+    }
   });
   const color = PLAN[activeDay].color;
-  ['entreno','progreso','plan'].forEach(v => {
+  ['entreno','progreso','plan','coach'].forEach(v => {
     const btn = document.getElementById('nav-' + v);
+    if (!btn) return;
     if (v === view) {
       btn.style.background = hex2rgb(color, 0.12);
       btn.style.borderColor = color;
@@ -992,6 +1054,7 @@ function showView(view) {
   });
   if (view === 'progreso') renderProgreso();
   if (view === 'plan') { planDraft = null; renderPlanEditor(); }
+  if (view === 'coach') initCoachView();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1934,8 +1997,9 @@ function renderDay() {
 
 function updateNavStyle() {
   const color = PLAN[activeDay].color;
-  ['entreno','progreso','plan'].forEach(v => {
+  ['entreno','progreso','plan','coach'].forEach(v => {
     const btn = document.getElementById('nav-' + v);
+    if (!btn) return;
     if (v === currentView) {
       btn.style.background = hex2rgb(color,0.12);
       btn.style.borderColor = color;
@@ -2295,6 +2359,288 @@ function trySilentAuth() {
     });
     client.requestAccessToken({ prompt: '' });
   } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
+// COACH IA
+// ═══════════════════════════════════════════════════════════
+const WORKER_KEY   = 'vshape_worker_url';
+const COACH_HISTORY_KEY = 'vshape_coach_history';
+let coachMessages  = [];   // {role, content}
+let coachThinking  = false;
+
+// ── Suggested prompts ───────────────────────────────────────
+const COACH_CHIPS = [
+  '¿Cómo va mi progreso esta semana?',
+  '¿Cuándo debería hacer descarga?',
+  '¿Puedo subir peso en algún ejercicio?',
+  '¿Estoy progresando en Press Militar?',
+  'Analiza mi RPE de esta semana',
+  '¿Qué día me conviene entrenar mañana?',
+];
+
+// ── Worker URL persistence ──────────────────────────────────
+function loadWorkerUrl() {
+  return localStorage.getItem(WORKER_KEY) || '';
+}
+function saveWorkerUrl() {
+  const val = document.getElementById('worker-url-input').value.trim();
+  if (!val.startsWith('http')) { showToast('URL inválida', '#f87171'); return; }
+  localStorage.setItem(WORKER_KEY, val);
+  document.getElementById('worker-url-input').classList.add('ok');
+  setCoachStatus('ready');
+  showToast('✓ Worker guardado', '#4ade80');
+}
+function setCoachStatus(state) {
+  const dot = document.getElementById('coach-status-dot');
+  if (!dot) return;
+  dot.className = state ? `${state}` : '';
+}
+
+// ── Build context from training data ───────────────────────
+function buildCoachContext() {
+  const profile = loadProfile();
+  const today   = todayStr();
+  const allData = loadData();
+
+  // Profile
+  const profileStr = [
+    profile.name ? `Nombre: ${profile.name}` : '',
+    `Edad: ${profile.age} años`,
+    `Peso: ${profile.weight} kg`,
+    `Objetivo: ${profile.goal}`,
+  ].filter(Boolean).join(', ');
+
+  // Plan summary
+  const planStr = DAY_ORDER.map(dk => {
+    const day = PLAN[dk];
+    const exs = day.blocks.flatMap(b => b.exercises.map(e => `${e.id}:${e.name}(${e.repsLabel})`));
+    return `${day.label}[${day.sub}]: ${exs.join(', ')}`;
+  }).join('\n');
+
+  // Recent sessions (last 30 days)
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const sessionLines = [];
+  const sessionNotes = [];
+
+  DAY_ORDER.forEach(dk => {
+    const suffix_prefix = `_${dk}_`;
+    const sessPrefix = 'session_' + dk.replace(/ /g,'_') + '_';
+    const notePrefix = 'sessionnote_' + dk.replace(/ /g,'_') + '_';
+
+    // Session durations
+    Object.entries(allData).forEach(([k, v]) => {
+      if (k.startsWith(sessPrefix)) {
+        const date = k.replace(sessPrefix, '');
+        if (date >= cutoffStr) sessionLines.push(`${date} ${dk}: duración ${Math.floor(v.durationSecs/60)}min`);
+      }
+      if (k.startsWith(notePrefix)) {
+        const date = k.replace(notePrefix, '');
+        if (date >= cutoffStr && v.note) sessionNotes.push(`${date} ${dk}: "${v.note}"`);
+      }
+    });
+
+    // Exercise data
+    PLAN[dk].blocks.forEach(block => {
+      block.exercises.forEach(ex => {
+        const suffix = `_${dk}_${block.id}_${ex.id}`;
+        const entries = Object.entries(allData)
+          .filter(([k]) => k.endsWith(suffix))
+          .map(([k, v]) => ({ date: k.replace(suffix,''), val: v }))
+          .filter(({ date }) => /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= cutoffStr)
+          .sort((a,b) => a.date.localeCompare(b.date));
+
+        entries.forEach(({ date, val }) => {
+          if (!val.sets || !val.completed) return;
+          const sets = val.sets
+            .map((s, i) => val.completed[i]
+              ? `${s.weight||'BW'}kg×${s.reps||'?'}${s.rpe ? `@${s.rpe}` : ''}`
+              : null)
+            .filter(Boolean);
+          if (sets.length) sessionLines.push(`${date} ${dk} ${ex.id}(${ex.name}): ${sets.join(' | ')}`);
+        });
+      });
+    });
+  });
+
+  sessionLines.sort();
+
+  return `Eres un entrenador personal experto con 15 años de experiencia en fitness y salud. Asesoras a este usuario de forma personalizada y directa, usando sus datos reales de entrenamiento.
+
+PERFIL DEL USUARIO:
+${profileStr}
+
+PLAN ACTUAL (V-Shape Program):
+${planStr}
+
+HISTORIAL ÚLTIMOS 30 DÍAS (fecha · día · ejercicio: series):
+${sessionLines.length ? sessionLines.join('\n') : 'Sin datos aún.'}
+
+NOTAS DE SESIÓN:
+${sessionNotes.length ? sessionNotes.join('\n') : 'Sin notas.'}
+
+FECHA HOY: ${today}
+
+INSTRUCCIONES:
+- Responde siempre en español
+- Sé directo, práctico y conciso (máximo 200 palabras salvo que se pida análisis detallado)
+- Usa los datos reales del historial para fundamentar tus respuestas
+- Si detectas patrones (fatiga, estancamiento, progresión), coméntalos proactivamente
+- Cuando sugieras cambios de carga, sé específico (ej: "sube a 25kg en PDR")
+- No repitas el perfil del usuario en cada respuesta`;
+}
+
+// ── Render messages ─────────────────────────────────────────
+function renderCoachMessages() {
+  const container = document.getElementById('coach-messages');
+  if (!container) return;
+  container.innerHTML = coachMessages.map(m => {
+    if (m.role === 'system-ui') {
+      return `<div class="coach-msg system">${m.content}</div>`;
+    }
+    const cls = m.role === 'user' ? 'user' : 'assistant';
+    const formatted = m.role === 'assistant' ? formatCoachText(m.content) : escapeHtml(m.content);
+    return `<div class="coach-msg ${cls}">${formatted}</div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatCoachText(text) {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^[-•]\s(.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^(.+)$/, '<p>$1</p>');
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addThinkingBubble() {
+  const container = document.getElementById('coach-messages');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'coach-msg thinking-bubble';
+  el.id = 'coach-thinking';
+  el.innerHTML = '● ● ●';
+  el.style.letterSpacing = '4px';
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+function removeThinkingBubble() {
+  const el = document.getElementById('coach-thinking');
+  if (el) el.remove();
+}
+
+// ── Send message ────────────────────────────────────────────
+async function coachSend(prefill) {
+  const input = document.getElementById('coach-input');
+  const text  = (prefill || input.value).trim();
+  if (!text || coachThinking) return;
+
+  const workerUrl = loadWorkerUrl();
+  if (!workerUrl) {
+    showToast('Configura primero la URL del Worker', '#f87171');
+    document.getElementById('worker-url-input').focus();
+    return;
+  }
+
+  // Add user message
+  coachMessages.push({ role: 'user', content: text });
+  if (!prefill) { input.value = ''; input.style.height = 'auto'; }
+  renderCoachMessages();
+
+  // Disable input while thinking
+  coachThinking = true;
+  setCoachStatus('thinking');
+  document.getElementById('btn-coach-send').disabled = true;
+  addThinkingBubble();
+
+  try {
+    // Build messages array for API (exclude system-ui messages)
+    const apiMessages = coachMessages
+      .filter(m => m.role !== 'system-ui')
+      .map(m => ({ role: m.role, content: m.content }));
+
+    const resp = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: buildCoachContext(),
+        messages: apiMessages,
+      }),
+    });
+
+    const data = await resp.json();
+
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+
+    const reply = data.content?.[0]?.text || '(Sin respuesta)';
+    coachMessages.push({ role: 'assistant', content: reply });
+    setCoachStatus('ready');
+
+  } catch (err) {
+    coachMessages.push({ role: 'assistant', content: `⚠️ Error al conectar con el Worker: ${err.message}` });
+    setCoachStatus('error');
+  } finally {
+    coachThinking = false;
+    removeThinkingBubble();
+    document.getElementById('btn-coach-send').disabled = false;
+    renderCoachMessages();
+  }
+}
+
+function coachKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); coachSend(); }
+}
+
+function autoResizeCoachInput() {
+  const ta = document.getElementById('coach-input');
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  document.getElementById('btn-coach-send').disabled = ta.value.trim().length === 0;
+}
+
+// ── Init coach view ─────────────────────────────────────────
+function initCoachView() {
+  // Worker URL
+  const saved = loadWorkerUrl();
+  const input = document.getElementById('worker-url-input');
+  if (input) {
+    input.value = saved;
+    if (saved) { input.classList.add('ok'); setCoachStatus('ready'); }
+  }
+
+  // Chips
+  const chips = document.getElementById('coach-chips');
+  if (chips) {
+    chips.innerHTML = COACH_CHIPS.map(c =>
+      `<button class="coach-chip" onclick="coachSend('${c.replace(/'/g,"&#39;")}')">${c}</button>`
+    ).join('');
+  }
+
+  // Welcome message if first time
+  if (coachMessages.length === 0) {
+    const profile = loadProfile();
+    const name = profile.name ? `, ${profile.name}` : '';
+    coachMessages.push({
+      role: 'system-ui',
+      content: `Coach listo${name} · Contexto cargado con tu historial completo`
+    });
+    renderCoachMessages();
+  }
+
+  // Style send button with active day color
+  const color = PLAN[activeDay].color;
+  const btn = document.getElementById('btn-coach-send');
+  if (btn) { btn.style.background = color; btn.style.color = '#000'; }
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -513,10 +513,36 @@ function loadData() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)|
 function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} scheduleDriveSync(d); }
 function todayStr() { return new Date().toISOString().split("T")[0]; }
 function dataKey(dayKey, blockId, exId, date) { return `${date||todayStr()}_${dayKey}_${blockId}_${exId}`; }
+function getLastSessionExData(dayKey, blockId, exId) {
+  const all = loadData();
+  const suffix = `_${dayKey}_${blockId}_${exId}`;
+  const today = todayStr();
+  let best = null;
+  Object.entries(all).forEach(([key, val]) => {
+    if (!key.endsWith(suffix)) return;
+    const date = key.slice(0, key.length - suffix.length);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    if (date >= today) return; // skip today or future
+    if (!best || date > best.date) best = { date, val };
+  });
+  return best ? best.val : null;
+}
+
 function getExData(dayKey, blockId, exId, numSets) {
   const d = loadData();
   const k = dataKey(dayKey, blockId, exId);
-  return d[k] || { sets: Array.from({length:numSets},()=>({weight:"",reps:""})), completed: Array(numSets).fill(false), notes: "" };
+  if (d[k]) return d[k];
+  // Pre-fill from last session if available
+  const last = getLastSessionExData(dayKey, blockId, exId);
+  if (last && last.sets) {
+    return {
+      sets: last.sets.map(s => ({ weight: s.weight || "", reps: s.reps || "" })),
+      completed: Array(numSets).fill(false),
+      notes: "",
+      prefilled: true
+    };
+  }
+  return { sets: Array.from({length:numSets},()=>({weight:"",reps:""})), completed: Array(numSets).fill(false), notes: "" };
 }
 function setExData(dayKey, blockId, exId, data) {
   data.lastModified = Date.now();
@@ -925,116 +951,188 @@ function showView(view) {
 // ═══════════════════════════════════════════════════════════
 // RENDER PROGRESO (ENHANCED)
 // ═══════════════════════════════════════════════════════════
+// Paleta de colores para las líneas de cada ejercicio dentro de un día
+const EX_LINE_COLORS = ['#60a5fa','#f472b6','#34d399','#fbbf24','#a78bfa','#fb923c','#22d3ee','#f87171'];
+
+// series = [{name, id, history:[{date, maxWeight}]}, ...]
+function drawDayProgressChart(canvas, series) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight || 170;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+
+  // Collect all unique dates across series that have weight data
+  const dateSet = new Set();
+  series.forEach(s => s.history.forEach(h => { if (h.maxWeight > 0) dateSet.add(h.date); }));
+  const allDates = [...dateSet].sort();
+  if (!allDates.length) {
+    ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = "600 12px 'Barlow', sans-serif";
+    ctx.textAlign = 'center'; ctx.fillText('Solo ejercicios sin peso registrados', W/2, H/2); return;
+  }
+
+  const pad = { top: 16, right: 16, bottom: 28, left: 44 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+
+  // Global Y range
+  let allW = [];
+  series.forEach(s => s.history.forEach(h => { if (h.maxWeight > 0) allW.push(h.maxWeight); }));
+  const minV = Math.max(0, Math.min(...allW) * 0.88);
+  const maxV = Math.max(...allW) * 1.1;
+  const range = maxV - minV || 1;
+
+  const xOf = date => pad.left + (allDates.indexOf(date) / (allDates.length - 1 || 1)) * cw;
+  const yOf = v => pad.top + ch - ((v - minV) / range) * ch;
+
+  // Grid lines + Y labels
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.top + (ch / 3) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const gv = maxV - (range / 3) * i;
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.font = "600 9px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'right'; ctx.fillText(gv.toFixed(0) + 'kg', pad.left - 5, y + 4);
+  }
+
+  // X axis date labels (max 5)
+  const step = Math.max(1, Math.floor(allDates.length / 5));
+  ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.font = "600 8px 'Barlow', sans-serif"; ctx.textAlign = 'center';
+  allDates.forEach((d, i) => {
+    if (i % step === 0 || i === allDates.length - 1) ctx.fillText(formatDate(d), xOf(d), H - 5);
+  });
+
+  // Draw each exercise line
+  series.forEach((s, si) => {
+    const color = s.color;
+    const pts = s.history.filter(h => h.maxWeight > 0).map(h => ({ x: xOf(h.date), y: yOf(h.maxWeight), val: h.maxWeight }));
+    if (!pts.length) return;
+
+    // Fill gradient
+    if (pts.length >= 2) {
+      const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+      grad.addColorStop(0, hex2rgb(color, 0.10)); grad.addColorStop(1, hex2rgb(color, 0.0));
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const cpx = (pts[i-1].x + pts[i].x) / 2;
+        ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      }
+      ctx.lineTo(pts[pts.length-1].x, pad.top+ch); ctx.lineTo(pts[0].x, pad.top+ch);
+      ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const cpx = (pts[i-1].x + pts[i].x) / 2;
+        ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+
+    // Dots
+    pts.forEach((p, i) => {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fillStyle = hex2rgb(color, 0.18); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctx.fillStyle = '#0C0C0F'; ctx.fill();
+      // Value label on last point only
+      if (i === pts.length - 1) {
+        ctx.fillStyle = color; ctx.font = "700 9px 'JetBrains Mono', monospace"; ctx.textAlign = 'center';
+        ctx.fillText(p.val + 'kg', p.x, p.y - 9);
+      }
+    });
+  });
+}
+
 function renderProgreso() {
   const container = document.getElementById("progreso-view");
   let anyData = false, html = "";
 
-  // Session durations — single combined chart
+  // ── Gráfica de duración de sesión (combinada) ──────────────
   const allSessData = DAY_ORDER.map(dayKey => ({
-    dayKey,
-    color: PLAN[dayKey].color,
-    label: PLAN[dayKey].label,
-    sub: PLAN[dayKey].sub,
-    history: getSessionHistory(dayKey)
+    dayKey, color: PLAN[dayKey].color, label: PLAN[dayKey].label,
+    sub: PLAN[dayKey].sub, history: getSessionHistory(dayKey)
   })).filter(s => s.history.length > 0);
 
   if (allSessData.length > 0) {
     anyData = true;
-    // Legend pills
     const legendHtml = allSessData.map(s => `
       <span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:${s.color};background:${hex2rgb(s.color,0.1)};border:1px solid ${hex2rgb(s.color,0.25)};border-radius:100px;padding:3px 9px;white-space:nowrap">
         <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.label}
       </span>`).join('');
-    // Stats row: total sessions per day
     const statsHtml = allSessData.map(s => {
       const best = Math.min(...s.history.map(h=>h.durationSecs));
       const bm = Math.floor(best/60), bs = best%60;
-      return `<div class="prog-stat">
-        <div class="prog-stat-val" style="color:${s.color}">${bm}:${String(bs).padStart(2,'0')}</div>
-        <div class="prog-stat-lbl">${s.label} mejor</div>
-      </div>`;
+      return `<div class="prog-stat"><div class="prog-stat-val" style="color:${s.color}">${bm}:${String(bs).padStart(2,'0')}</div><div class="prog-stat-lbl">${s.label} mejor</div></div>`;
     }).join('');
-
     html += `
-      <div style="margin-bottom:8px;padding:16px 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>
+      <div style="padding:16px 0 8px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">⏱ Duración por sesión</div>
       <div class="prog-session-card">
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${legendHtml}</div>
-        <canvas id="sess-chart-combined" class="prog-chart-time" style="height:160px"></canvas>
+        <canvas id="sess-chart-combined" class="prog-chart-time" style="height:150px"></canvas>
         <div class="prog-stats-row" style="margin-top:10px">${statsHtml}</div>
       </div>`;
   }
 
-  // Exercise progress per day
-  DAY_ORDER.forEach(dayKey => {
-    const day = PLAN[dayKey], color = day.color;
-    let dayHtml = "";
+  // ── Una tarjeta por día con gráfica multi-línea de pesos ───
+  const daySeries = {}; // dayKey → [{name, id, color, history}]
 
-    day.blocks.forEach(block => {
-      block.exercises.forEach(ex => {
+  DAY_ORDER.forEach(dayKey => {
+    const day = PLAN[dayKey];
+    daySeries[dayKey] = [];
+    day.blocks.forEach((block, bi) => {
+      block.exercises.forEach((ex, ei) => {
         const history = getExerciseHistory(dayKey, block.id, ex.id);
         if (!history.length) return;
         anyData = true;
-
-        const isBW = history.every(h => h.isBodyweight);
-        const canvasId = `chart-${dayKey}-${block.id}-${ex.id}`.replace(/ /g,"_");
-
-        let bestVal, firstVal, lastVal, deltaStr, trend, trendColor;
-        let statMid, statMidLbl, statRight, statRightLbl;
-
-        if (isBW) {
-          bestVal = Math.max(...history.map(h => h.totalReps));
-          firstVal = history[0].totalReps;
-          lastVal = history[history.length-1].totalReps;
-          const delta = lastVal - firstVal;
-          deltaStr = delta >= 0 ? `+${delta}` : `${delta}`;
-          trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
-          trendColor = delta > 0 ? "#4ade80" : delta < 0 ? "#f87171" : "rgba(255,255,255,0.4)";
-          statMid = `${trend} ${Math.abs(delta)}r`; statMidLbl = "Evolución";
-          statRight = `${bestVal}r`; statRightLbl = "Mejor sesión";
-        } else {
-          bestVal = Math.max(...history.map(h => h.maxWeight));
-          firstVal = history[0].maxWeight;
-          lastVal = history[history.length-1].maxWeight;
-          const delta = parseFloat((lastVal - firstVal).toFixed(1));
-          deltaStr = delta >= 0 ? `+${delta}` : `${delta}`;
-          trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
-          trendColor = delta > 0 ? "#4ade80" : delta < 0 ? "#f87171" : "rgba(255,255,255,0.4)";
-          const totalVol = history.reduce((s,h) => s + h.totalVol, 0);
-          statMid = `${trend} ${Math.abs(delta)}kg`; statMidLbl = "Evolución";
-          statRight = totalVol >= 1000 ? (totalVol/1000).toFixed(1)+"t" : totalVol+"kg"; statRightLbl = "Vol. total";
-        }
-
-        const badgeLabel = isBW ? `${bestVal} reps` : `${bestVal}kg max`;
-        const breakdownHtml = renderSessionBreakdown(history, color, isBW);
-
-        dayHtml += `
-          <div class="prog-ex-card">
-            <div class="prog-ex-header">
-              <div class="ex-id-badge" style="color:${color};background:${hex2rgb(color,0.12)};border-color:${color}">${ex.id}</div>
-              <div class="prog-ex-name">${ex.name}</div>
-              <div class="prog-ex-best" style="color:${color};background:${hex2rgb(color,0.1)};border-color:${hex2rgb(color,0.3)}">${badgeLabel}</div>
-            </div>
-            <div class="prog-canvas-wrap"><canvas id="${canvasId}" class="prog-chart"></canvas></div>
-            <div class="prog-stats-row">
-              <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${history.length}</div><div class="prog-stat-lbl">Sesiones</div></div>
-              <div class="prog-stat"><div class="prog-stat-val" style="color:${trendColor}">${statMid}</div><div class="prog-stat-lbl">${statMidLbl}</div></div>
-              <div class="prog-stat"><div class="prog-stat-val" style="color:${color}">${statRight}</div><div class="prog-stat-lbl">${statRightLbl}</div></div>
-            </div>
-            ${breakdownHtml}
-          </div>`;
+        const color = EX_LINE_COLORS[(bi * 2 + ei) % EX_LINE_COLORS.length];
+        daySeries[dayKey].push({ name: ex.name, id: ex.id, color, history });
       });
     });
+  });
 
-    if (dayHtml) {
-      html += `
-        <div class="prog-day-section">
-          <div class="prog-day-title">
-            <div class="prog-day-dot" style="background:${color}"></div>
-            <span style="color:${color}">${day.label}</span>
-            <span style="color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:0">${day.sub}</span>
-          </div>${dayHtml}
-        </div>`;
-    }
+  DAY_ORDER.forEach(dayKey => {
+    const series = daySeries[dayKey];
+    if (!series.length) return;
+    const day = PLAN[dayKey], dc = day.color;
+    const canvasId = `day-chart-${dayKey.replace(/ /g,'_')}`;
+
+    // Legend pills per exercise
+    const legendHtml = series.map(s => `
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:${s.color};background:${hex2rgb(s.color,0.09)};border:1px solid ${hex2rgb(s.color,0.22)};border-radius:100px;padding:3px 8px;white-space:nowrap">
+        <span style="width:5px;height:5px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.id} ${s.name}
+      </span>`).join('');
+
+    // Last session detail row (last entry only)
+    const lastSessionChips = series.map(s => {
+      const lastH = [...s.history].reverse()[0];
+      if (!lastH) return '';
+      const chipContent = lastH.isBodyweight
+        ? lastH.sets.map(set => `${set.reps||'?'}r`).join(' · ')
+        : lastH.sets.filter(set => set.weight > 0).map(set => `${set.weight}×${set.reps}`).join(' · ');
+      if (!chipContent) return '';
+      return `<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px">
+        <span style="font-size:9px;font-weight:700;color:${s.color};letter-spacing:0.5px;flex-shrink:0;min-width:28px">${s.id}</span>
+        <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.55)">${chipContent}</span>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    const numSessions = Math.max(...series.map(s => s.history.length));
+
+    html += `
+      <div class="prog-day-section">
+        <div class="prog-day-title">
+          <div class="prog-day-dot" style="background:${dc}"></div>
+          <span style="color:${dc}">${day.label}</span>
+          <span style="color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:0">${day.sub}</span>
+          <span style="margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.3)">${numSessions} sesión${numSessions !== 1 ? 'es' : ''}</span>
+        </div>
+        <div class="prog-ex-card" style="border-color:${hex2rgb(dc,0.15)}">
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">${legendHtml}</div>
+          <canvas id="${canvasId}" style="width:100%;height:170px;display:block"></canvas>
+          ${lastSessionChips ? `
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+              <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:8px">Última sesión · ${formatDate([...series.flatMap(s=>s.history)].sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'')}</div>
+              ${lastSessionChips}
+            </div>` : ''}
+        </div>
+      </div>`;
   });
 
   if (!anyData) {
@@ -1045,23 +1143,15 @@ function renderProgreso() {
 
   if (anyData) {
     requestAnimationFrame(() => {
-      // Combined session duration chart
+      // Duration combined chart
       const combinedCanvas = document.getElementById('sess-chart-combined');
-      if (combinedCanvas && allSessData.length > 0) {
-        drawMultiTimeChart(combinedCanvas, allSessData);
-      }
-      // Exercise load charts
+      if (combinedCanvas && allSessData.length > 0) drawMultiTimeChart(combinedCanvas, allSessData);
+      // Day progress charts
       DAY_ORDER.forEach(dayKey => {
-        const day = PLAN[dayKey];
-        day.blocks.forEach(block => {
-          block.exercises.forEach(ex => {
-            const history = getExerciseHistory(dayKey, block.id, ex.id);
-            if (!history.length) return;
-            const canvasId = `chart-${dayKey}-${block.id}-${ex.id}`.replace(/ /g,"_");
-            const canvas = document.getElementById(canvasId);
-            if (canvas) drawChart(canvas, history, day.color, history.every(h => h.isBodyweight));
-          });
-        });
+        const series = daySeries[dayKey];
+        if (!series.length) return;
+        const canvas = document.getElementById(`day-chart-${dayKey.replace(/ /g,'_')}`);
+        if (canvas) drawDayProgressChart(canvas, series);
       });
     });
   }
@@ -1369,13 +1459,17 @@ function renderExerciseCard(ex, block, dayKey, color, isSS, isFirst, isLast) {
       </div>`;
   }
 
+  const prefillBadge = data.prefilled
+    ? `<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:2px 7px;margin-left:4px">↺ últ. sesión</span>`
+    : '';
+
   return `
     <div id="ex-card-${dayKey}-${block.id}-${ex.id}" class="ex-card"
       style="border-radius:${br};background:${cardBg};border-color:${cardBorder};margin-bottom:${isSS&&!isLast?"2px":"12px"}">
       <div class="ex-header">
         <div class="ex-id-badge" style="color:${idColor};background:${idBg};border-color:${idBorder}" aria-label="Ejercicio ${ex.id}">${ex.id}</div>
         <div style="flex:1">
-          <div class="ex-name" style="color:${nameColor}">${ex.name}</div>
+          <div class="ex-name" style="color:${nameColor}">${ex.name}${prefillBadge}</div>
           <div class="ex-meta">${ex.sets} series · <span style="color:${repsColor}">${ex.repsLabel} reps</span></div>
         </div>
         <button id="btn-notes-${dayKey}-${block.id}-${ex.id}" class="btn-notes" onclick="toggleNotes('${dayKey}','${block.id}','${ex.id}')" aria-label="Notas del ejercicio">📝</button>

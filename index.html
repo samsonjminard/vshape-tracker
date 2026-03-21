@@ -2064,7 +2064,7 @@ function renderPlanEditor() {
     if (dayKey === 'Torso A') {
       html += `<div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;display:flex;align-items:center;gap:10px">
         <span style="font-size:11px;color:rgba(255,215,0,0.8);flex:1;font-weight:600">⚠️ Intercambiar historial B1↔B2 (Elevaciones ↔ Remo)</span>
-        <button onclick="swapExerciseData('Torso A','B','B1','B2')" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.35);border-radius:8px;color:#FFD700;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0">Intercambiar</button>
+        <button data-swap-btn onclick="swapExerciseData('Torso A','B','B1','B2')" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.35);border-radius:8px;color:#FFD700;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0">Intercambiar</button>
       </div>`;
     }
 
@@ -2172,30 +2172,42 @@ function planRemoveExercise(dayKey, blockIdx, exIdx) {
 }
 
 function swapExerciseData(dayKey, blockId, exIdA, exIdB) {
-  const allData = loadData();
-  const suffix = `_${dayKey}_${blockId}_`;
-  const keysA = Object.keys(allData).filter(k => k.includes(`${suffix}${exIdA}`));
-  const keysB = Object.keys(allData).filter(k => k.includes(`${suffix}${exIdB}`));
+  openConfirmModal(
+    `¿Intercambiar datos ${exIdA} ↔ ${exIdB}?`,
+    `Se moverán <strong>todos los registros históricos</strong> de ${exIdA} a ${exIdB} y viceversa. Los datos de hoy también se intercambiarán. Esta acción no se puede deshacer.`,
+    () => {
+      const allData = loadData();
+      // Use exact suffix matching to avoid partial matches
+      const suffixA = `_${dayKey}_${blockId}_${exIdA}`;
+      const suffixB = `_${dayKey}_${blockId}_${exIdB}`;
+      const keysA = Object.keys(allData).filter(k => k.endsWith(suffixA));
+      const keysB = Object.keys(allData).filter(k => k.endsWith(suffixB));
 
-  // Rename A → tmp
-  keysA.forEach(k => {
-    const newKey = k.replace(`${suffix}${exIdA}`, `${suffix}__tmp__`);
-    allData[newKey] = allData[k]; delete allData[k];
-  });
-  // Rename B → A
-  keysB.forEach(k => {
-    const newKey = k.replace(`${suffix}${exIdB}`, `${suffix}${exIdA}`);
-    allData[newKey] = allData[k]; delete allData[k];
-  });
-  // Rename tmp → B
-  Object.keys(allData).filter(k => k.includes(`${suffix}__tmp__`)).forEach(k => {
-    const newKey = k.replace(`${suffix}__tmp__`, `${suffix}${exIdB}`);
-    allData[newKey] = allData[k]; delete allData[k];
-  });
+      // A → tmp
+      keysA.forEach(k => {
+        allData[k.slice(0, k.length - suffixA.length) + `_${dayKey}_${blockId}___tmp__`] = allData[k];
+        delete allData[k];
+      });
+      // B → A
+      keysB.forEach(k => {
+        allData[k.slice(0, k.length - suffixB.length) + suffixA] = allData[k];
+        delete allData[k];
+      });
+      // tmp → B
+      const tmpSuffix = `_${dayKey}_${blockId}___tmp__`;
+      Object.keys(allData).filter(k => k.endsWith(tmpSuffix)).forEach(k => {
+        allData[k.slice(0, k.length - tmpSuffix.length) + suffixB] = allData[k];
+        delete allData[k];
+      });
 
-  saveData(allData);
-  renderDay();
-  showToast(`✓ Datos de ${exIdA} y ${exIdB} intercambiados`, '#4ade80');
+      saveData(allData);
+      renderDay();
+      showToast(`✓ Datos ${exIdA} ↔ ${exIdB} intercambiados`, '#4ade80');
+
+      // Hide the swap button after use
+      document.querySelectorAll('[data-swap-btn]').forEach(el => el.remove());
+    }
+  );
 }
 
 function savePlanFromEditor() {

@@ -440,73 +440,71 @@ function playCheckSound() {
 // CONSTANTS & DATA
 // ═══════════════════════════════════════════════════════════
 const STORAGE_KEY = "vshape_html_v1";
-const PLAN_KEY    = "vshape_plan_v2";
+const PLAN_KEY    = "vshape_plan_v3";
 const PROFILE_KEY = "vshape_profile_v1";
 
 const DEFAULT_PLAN = {
   "Torso A": {
-    label: "TORSO A", sub: "Estructura · Lunes", color: "#00E5FF",
+    label: "TORSO A", sub: "Hombro y Densidad · Lunes", color: "#00E5FF",
     blocks: [
-      { id: "A", ss: true, rest: 90, exercises: [
+      { id: "A", ss: true, rest: 60, exercises: [
         { id: "A1", name: "Press Inclinado Mancuernas", sets: 3, repsLabel: "10-12" },
-        { id: "A2", name: "Dominadas Pronas", sets: 3, repsLabel: "Fallo" },
+        { id: "A2", name: "Dominadas Pronas", sets: 3, repsLabel: "RIR 2" },
       ]},
-      { id: "B", ss: true, rest: 90, exercises: [
-        { id: "B1", name: "Elevaciones Laterales", sets: 4, repsLabel: "15-20" },
-        { id: "B2", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
+      { id: "B", ss: true, rest: 60, exercises: [
+        { id: "B1", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
+        { id: "B2", name: "Elevaciones Laterales", sets: 3, repsLabel: "12-15" },
       ]},
-      { id: "C", ss: true, rest: 90, exercises: [
+      { id: "C", ss: true, rest: 45, exercises: [
         { id: "C1", name: "Face Pulls", sets: 3, repsLabel: "15" },
-        { id: "C2", name: "Paseo del Granjero", sets: 3, repsLabel: "45-60s" },
+        { id: "C2", name: "Paseo del Granjero", sets: 3, repsLabel: "45s" },
       ]},
     ],
   },
   "Pierna A": {
-    label: "PIERNA A", sub: "Base · Martes", color: "#FFB300",
+    label: "PIERNA A", sub: "Cuádriceps · Martes", color: "#FFB300",
     blocks: [
-      { id: "A", ss: false, rest: 120, exercises: [
-        { id: "A1", name: "Sentadilla Trasera", sets: 4, repsLabel: "8" },
+      { id: "A", ss: false, rest: 90, exercises: [
+        { id: "A1", name: "Sentadilla Trasera", sets: 3, repsLabel: "8" },
       ]},
-      { id: "B", ss: true, rest: 90, exercises: [
-        { id: "B1", name: "Peso Muerto Rumano", sets: 3, repsLabel: "10-12" },
-        { id: "B2", name: "Gemelos de Pie", sets: 4, repsLabel: "15" },
+      { id: "B", ss: true, rest: 60, exercises: [
+        { id: "B1", name: "Sentadilla Búlgara", sets: 2, repsLabel: "10 c/pierna" },
+        { id: "B2", name: "Plancha Abdominal", sets: 2, repsLabel: "60s" },
       ]},
-      { id: "C", ss: true, rest: 90, exercises: [
-        { id: "C1", name: "Zancadas", sets: 3, repsLabel: "10" },
-        { id: "C2", name: "Plancha Abdominal", sets: 3, repsLabel: "60s" },
+      { id: "C", ss: true, rest: 60, exercises: [
+        { id: "C1", name: "Peso Muerto Rumano", sets: 3, repsLabel: "10-12" },
+        { id: "C2", name: "Gemelos de Pie", sets: 3, repsLabel: "15" },
       ]},
     ],
   },
   "Torso B": {
-    label: "TORSO B", sub: "Vertical · Jueves", color: "#76FF03",
+    label: "TORSO B", sub: "V-Shape Pro · Jueves", color: "#76FF03",
     blocks: [
-      { id: "A", ss: true, rest: 120, exercises: [
-        { id: "A1", name: "Press Militar Barra", sets: 4, repsLabel: "6-8" },
-        { id: "A2", name: "Chin-ups", sets: 3, repsLabel: "Fallo" },
+      { id: "A", ss: true, rest: 60, exercises: [
+        { id: "A1", name: "Press Militar Barra", sets: 3, repsLabel: "6-8" },
+        { id: "A2", name: "Chin-ups", sets: 3, repsLabel: "RIR 2" },
       ]},
-      { id: "B", ss: true, rest: 90, exercises: [
+      { id: "B", ss: true, rest: 60, exercises: [
         { id: "B1", name: "Remo Mancuerna 1 Mano", sets: 3, repsLabel: "10-12" },
-        { id: "B2", name: "Flexiones Manos Elevadas", sets: 3, repsLabel: "15" },
+        { id: "B2", name: "Flexiones", sets: 3, repsLabel: "RIR 1" },
       ]},
-      { id: "C", ss: true, rest: 90, exercises: [
-        { id: "C1", name: "Elevaciones Laterales", sets: 3, repsLabel: "15" },
-        { id: "C2", name: "Extensiones Tríceps", sets: 3, repsLabel: "12" },
+      { id: "C", ss: true, rest: 30, exercises: [
+        { id: "C1", name: "Pullover Polea", sets: 2, repsLabel: "15" },
+        { id: "C2", name: "Elevaciones Laterales", sets: 2, repsLabel: "15" },
       ]},
     ],
   },
   "Pierna B": {
-    label: "PIERNA B", sub: "Posterior · Viernes", color: "#FF4081",
+    label: "PIERNA B", sub: "Cadena Posterior · Viernes", color: "#FF4081",
     blocks: [
       { id: "A", ss: false, rest: 120, exercises: [
         { id: "A1", name: "Peso Muerto Convencional", sets: 3, repsLabel: "5-7" },
       ]},
-      { id: "B", ss: true, rest: 90, exercises: [
+      { id: "B", ss: false, rest: 60, exercises: [
         { id: "B1", name: "Goblet Squat", sets: 3, repsLabel: "12" },
-        { id: "B2", name: "Face Pulls", sets: 3, repsLabel: "15" },
       ]},
-      { id: "C", ss: false, rest: 90, exercises: [
+      { id: "C", ss: false, rest: 45, exercises: [
         { id: "C1", name: "Rueda Abdominal", sets: 3, repsLabel: "10" },
-        { id: "C2", name: "Estiramiento Pectoral", sets: 2, repsLabel: "1 min" },
       ]},
     ],
   },

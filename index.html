@@ -507,8 +507,8 @@ const DEFAULT_PLAN = {
         { id: "A2", name: "Dominadas Pronas", sets: 3, repsLabel: "RIR 2" },
       ]},
       { id: "B", ss: true, rest: 60, exercises: [
-        { id: "B1", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
-        { id: "B2", name: "Elevaciones Laterales", sets: 3, repsLabel: "12-15" },
+        { id: "B1", name: "Elevaciones Laterales", sets: 3, repsLabel: "12-15" },
+        { id: "B2", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
       ]},
       { id: "C", ss: true, rest: 45, exercises: [
         { id: "C1", name: "Face Pulls", sets: 3, repsLabel: "15" },
@@ -2059,7 +2059,12 @@ function renderPlanEditor() {
           </div>
           <div class="plan-day-chevron" id="chevron-${dayKey}">▼</div>
         </div>
-        <div class="plan-day-body" id="plan-day-body-${dayKey}" style="display:none">`;
+        <div class="plan-day-body" id="plan-day-body-${dayKey}" style="display:none">
+        ${dayKey === 'Torso A' ? `
+          <div style="margin-bottom:10px;padding:10px 12px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:rgba(255,215,0,0.8);flex:1;font-weight:600">⚠️ Intercambiar historial B1↔B2 (Elevaciones ↔ Remo)</span>
+            <button onclick="swapExerciseData('Torso A','B','B1','B2')" style="background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.35);border-radius:8px;color:#FFD700;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0">Intercambiar</button>
+          </div>` : ''}`;
 
     day.blocks.forEach((block, bi) => {
       html += `
@@ -2164,7 +2169,32 @@ function planRemoveExercise(dayKey, blockIdx, exIdx) {
   togglePlanDay(dayKey);
 }
 
-function savePlanFromEditor() {
+function swapExerciseData(dayKey, blockId, exIdA, exIdB) {
+  const allData = loadData();
+  const suffix = `_${dayKey}_${blockId}_`;
+  const keysA = Object.keys(allData).filter(k => k.includes(`${suffix}${exIdA}`));
+  const keysB = Object.keys(allData).filter(k => k.includes(`${suffix}${exIdB}`));
+
+  // Rename A → tmp
+  keysA.forEach(k => {
+    const newKey = k.replace(`${suffix}${exIdA}`, `${suffix}__tmp__`);
+    allData[newKey] = allData[k]; delete allData[k];
+  });
+  // Rename B → A
+  keysB.forEach(k => {
+    const newKey = k.replace(`${suffix}${exIdB}`, `${suffix}${exIdA}`);
+    allData[newKey] = allData[k]; delete allData[k];
+  });
+  // Rename tmp → B
+  Object.keys(allData).filter(k => k.includes(`${suffix}__tmp__`)).forEach(k => {
+    const newKey = k.replace(`${suffix}__tmp__`, `${suffix}${exIdB}`);
+    allData[newKey] = allData[k]; delete allData[k];
+  });
+
+  saveData(allData);
+  renderDay();
+  showToast(`✓ Datos de ${exIdA} y ${exIdB} intercambiados`, '#4ade80');
+}
   if (!planDraft) return;
   PLAN = JSON.parse(JSON.stringify(planDraft));
   DAY_ORDER = Object.keys(PLAN);

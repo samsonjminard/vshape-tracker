@@ -304,4 +304,1197 @@ var DEFAULT_PLAN = {
     label:'CARDIO Z2', sub:'Trail Zona 2 · Martes', color:'#00e5a0', cardio:true,
     prescription:{
       icon:'🏔️', zone:'Zona 2', fcTarget:'106–123 bpm', duration:'50–60 min',
-      description:'Marcha rápida en cue
+      description:'Marcha rápida en cuesta. Ritmo conversacional. FC bajo 123 bpm en todo momento.',
+      rule:'⚠ Si superas 123 bpm → reduce el ritmo aunque vayas despacio. Alerta Garmin: 123 bpm.'
+    }
+  },
+  'Pierna': {
+    label:'PIERNA', sub:'Cuád + Cadena Posterior · Miércoles', color:'#ffd60a', cardio:false,
+    blocks:[
+      {id:'A',ss:false,rest:120,exercises:[
+        {id:'A1',name:'Sentadilla Trasera',sets:3,repsLabel:'6-8'}
+      ]},
+      {id:'B',ss:true,rest:90,exercises:[
+        {id:'B1',name:'Peso Muerto Rumano',sets:3,repsLabel:'10-12'},
+        {id:'B2',name:'Gemelos de Pie',sets:3,repsLabel:'15'}
+      ]},
+      {id:'C',ss:true,rest:90,exercises:[
+        {id:'C1',name:'Zancadas',sets:2,repsLabel:'10 c/pierna'},
+        {id:'C2',name:'Plancha Abdominal',sets:2,repsLabel:'60s'}
+      ]},
+      {id:'D',ss:false,rest:60,exercises:[
+        {id:'D1',name:'Rueda Abdominal',sets:3,repsLabel:'8-10'}
+      ]}
+    ]
+  },
+  'Torso B': {
+    label:'TORSO B', sub:'V-Shape Vertical · Viernes', color:'#ff9f0a', cardio:false,
+    blocks:[
+      {id:'A',ss:true,rest:120,exercises:[
+        {id:'A1',name:'Press Militar Barra',sets:3,repsLabel:'6-8'},
+        {id:'A2',name:'Chin-ups',sets:3,repsLabel:'RIR 2'}
+      ]},
+      {id:'B',ss:true,rest:90,exercises:[
+        {id:'B1',name:'Remo Mancuerna 1 Mano',sets:3,repsLabel:'10-12'},
+        {id:'B2',name:'Fondos en Paralelas',sets:3,repsLabel:'6-10'}
+      ]},
+      {id:'C',ss:true,rest:90,exercises:[
+        {id:'C1',name:'Pullover con Goma',sets:2,repsLabel:'15'},
+        {id:'C2',name:'Elevaciones Laterales',sets:2,repsLabel:'15'}
+      ]}
+    ]
+  },
+  'Cardio INT': {
+    label:'CARDIO INT', sub:'Intervalos en Cuesta · Sábado', color:'#ff2d55', cardio:true,
+    prescription:{
+      icon:'⚡', zone:'Zona 4–5', fcTarget:'141–176 bpm', duration:'30–35 min',
+      description:'10 min Z2 calentamiento → 6–8 × 45–60s cuesta al 85–90% FCmax → bajar andando entre series.',
+      rule:'⚠ SIEMPRE bajar andando. La excéntrica en bajada es el mayor riesgo para el tobillo.'
+    }
+  }
+};
+
+var DAYS = ['Torso A','Cardio Z2','Pierna','Torso B','Cardio INT'];
+var activeDay = DAYS[0];
+var activeDate = new Date().toISOString().slice(0,10);
+var weekOffset = 0;
+var restTimer = null;
+var restEnd = null;
+var restTotal = null;
+var coachMsgs = [];
+var charts = {};
+
+// ══════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════
+function loadData() { try { return JSON.parse(localStorage.getItem(DATA_KEY) || '{}'); } catch(e) { return {}; } }
+function saveData(d) { localStorage.setItem(DATA_KEY, JSON.stringify(d)); scheduleDriveSync(); }
+function loadProf() { try { return Object.assign({}, DEFAULT_PROF, JSON.parse(localStorage.getItem(PROF_KEY) || '{}')); } catch(e) { return Object.assign({}, DEFAULT_PROF); } }
+function saveProf(p) { localStorage.setItem(PROF_KEY, JSON.stringify(p)); scheduleDriveSync(); }
+function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch(e) { return []; } }
+function saveHist(h) { localStorage.setItem(HIST_KEY, JSON.stringify(h)); scheduleDriveSync(); }
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function getWeekStart(off) {
+  var d = new Date();
+  var day = d.getDay();
+  var diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff + off * 7);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getWeekKey(off) {
+  var d = getWeekStart(off);
+  var yr = d.getFullYear();
+  var jan1 = new Date(yr, 0, 1);
+  var wk = Math.ceil((((d - jan1) / 86400000) + jan1.getDay() + 1) / 7);
+  return yr + '-W' + String(wk).padStart(2,'0');
+}
+
+function getWeekLabel(off) {
+  var s = getWeekStart(off);
+  var e = new Date(s); e.setDate(e.getDate() + 6);
+  var fmt = function(dt) { return dt.toLocaleDateString('es-ES',{day:'numeric',month:'short'}); };
+  return fmt(s) + ' – ' + fmt(e);
+}
+
+function loadWeekEntry(wk) {
+  return loadHist().find(function(e) { return e.weekKey === wk; }) || null;
+}
+
+function saveWeekEntry(entry) {
+  var h = loadHist();
+  var idx = h.findIndex(function(e) { return e.weekKey === entry.weekKey; });
+  if (idx >= 0) h[idx] = entry; else h.push(entry);
+  h.sort(function(a,b) { return a.weekKey < b.weekKey ? -1 : 1; });
+  saveHist(h);
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('p-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'entreno') renderEntreno();
+  else if (id === 'recovery') renderRecovery();
+  else if (id === 'progreso') renderProgreso();
+  else if (id === 'coach') renderCoach();
+}
+
+function toast(msg, color) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color || '#353545';
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2600);
+}
+
+// ══════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════
+function openSettings() {
+  var p = loadProf();
+  document.getElementById('s-name').value = p.name || '';
+  document.getElementById('s-age').value = p.age || '';
+  document.getElementById('s-goalw').value = p.goalWeight || '';
+  document.getElementById('s-prot').value = p.proteinGoal || '';
+  document.getElementById('s-lt').value = p.ltHR || '';
+  document.getElementById('s-hrmax').value = p.maxHR || '';
+  document.getElementById('s-worker').value = p.workerUrl || '';
+  document.getElementById('ov-settings').classList.add('on');
+}
+
+function closeSettings() { document.getElementById('ov-settings').classList.remove('on'); }
+
+function saveSettings() {
+  var p = {
+    name: document.getElementById('s-name').value || 'Javi',
+    age: parseInt(document.getElementById('s-age').value) || 51,
+    goalWeight: parseFloat(document.getElementById('s-goalw').value) || 85,
+    proteinGoal: parseInt(document.getElementById('s-prot').value) || 175,
+    ltHR: parseInt(document.getElementById('s-lt').value) || 155,
+    maxHR: parseInt(document.getElementById('s-hrmax').value) || 176,
+    workerUrl: document.getElementById('s-worker').value.trim()
+  };
+  saveProf(p);
+  closeSettings();
+  toast('Configuración guardada', '#00e5a0');
+}
+
+// ══════════════════════════════════════════
+// SCORES
+// ══════════════════════════════════════════
+function norm(v, lo, hi) {
+  if (v == null || v === '' || isNaN(v)) return null;
+  return Math.max(0, Math.min(100, ((v - lo) / (hi - lo)) * 100));
+}
+
+function calcRecovery(w) {
+  var hrv  = norm(w.hrv, 20, 80);
+  var bb   = (w.bodyBattery != null && w.bodyBattery !== '') ? Math.max(0,Math.min(100,parseFloat(w.bodyBattery))) : null;
+  var fcr  = (w.fcReposo != null && w.fcReposo !== '') ? Math.max(0,Math.min(100,((80 - parseFloat(w.fcReposo)) / 40) * 100)) : null;
+  var en   = (w.energia != null && w.energia !== '') ? (parseFloat(w.energia) - 1) / 9 * 100 : null;
+  var parts = [[hrv,0.35],[bb,0.30],[fcr,0.20],[en,0.15]];
+  var valid = parts.filter(function(c) { return c[0] != null; });
+  if (!valid.length) return null;
+  var tw = valid.reduce(function(s,c) { return s+c[1]; }, 0);
+  return Math.round(valid.reduce(function(s,c) { return s+c[0]*c[1]; }, 0) / tw);
+}
+
+function calcRecomp(w, recovery, hist) {
+  var prof = loadProf();
+  var prot = (w.proteina != null && w.proteina !== '') ? Math.min(100, (parseFloat(w.proteina) / prof.proteinGoal) * 100) : null;
+  var pes = null;
+  if (w.peso != null && w.peso !== '' && hist.length > 0) {
+    var prev = hist[hist.length-1];
+    if (prev.wellness && prev.wellness.peso != null) {
+      var diff = parseFloat(w.peso) - parseFloat(prev.wellness.peso);
+      if (diff <= -0.5) pes = 100;
+      else if (diff < 0) pes = 60 + (-diff / 0.5) * 40;
+      else if (diff === 0) pes = 60;
+      else pes = Math.max(0, 60 - diff * 30);
+    }
+  }
+  var parts = [[prot,0.40],[recovery,0.35],[pes,0.25]];
+  var valid = parts.filter(function(c) { return c[0] != null; });
+  if (!valid.length) return null;
+  var tw = valid.reduce(function(s,c) { return s+c[1]; }, 0);
+  return Math.round(valid.reduce(function(s,c) { return s+c[0]*c[1]; }, 0) / tw);
+}
+
+function calcLongevity(w, hist) {
+  var vo2  = norm(w.vo2max, 25, 55);
+  var hrvc = null;
+  var rec4 = hist.slice(-4).filter(function(e) { return e.wellness && e.wellness.hrv != null; });
+  if (rec4.length) hrvc = norm(rec4.reduce(function(s,e) { return s+parseFloat(e.wellness.hrv); }, 0) / rec4.length, 20, 80);
+  var fcr = (w.fcReposo != null && w.fcReposo !== '') ? Math.max(0,Math.min(100,((80-parseFloat(w.fcReposo))/40)*100)) : null;
+  var sed = (w.sedentario != null && w.sedentario !== '') ? Math.max(0,Math.min(100,(1-parseFloat(w.sedentario)/10)*100)) : null;
+  var parts = [[vo2,0.35],[hrvc,0.25],[fcr,0.25],[sed,0.15]];
+  var valid = parts.filter(function(c) { return c[0] != null; });
+  if (!valid.length) return null;
+  var tw = valid.reduce(function(s,c) { return s+c[1]; }, 0);
+  return Math.round(valid.reduce(function(s,c) { return s+c[0]*c[1]; }, 0) / tw);
+}
+
+function getDecision(r) {
+  if (r == null) return {color:'#55556a',tag:'SIN DATOS',main:'Registra los datos de la semana',sub:'Introduce HRV, Body Battery y el resto de métricas para recibir la recomendación de carga semanal.'};
+  if (r >= 75) return {color:'#00e5a0',tag:'VERDE · CARGA MÁXIMA',main:'Fuerza máxima autorizada',sub:'Trabaja en rangos de 5–8 repeticiones con cargas altas. Intervalos en cuesta el sábado sin restricciones.'};
+  if (r >= 55) return {color:'#ffd60a',tag:'AMARILLO · CARGA MODERADA',main:'Volumen moderado, intensidad media',sub:'Mantén las series pero queda 2 reps del fallo. Zona 2 larga el martes. Prioriza técnica.'};
+  if (r >= 35) return {color:'#ff9f0a',tag:'NARANJA · REDUCIR',main:'Solo Zona 2, movilidad y técnica',sub:'Evita fuerza intensa. Recuperación activa y sueño prioritarios. Revisa proteína e hidratación.'};
+  return {color:'#ff2d55',tag:'ROJO · DESCANSO ACTIVO',main:'El sistema está bajo estrés',sub:'Camina, movilidad suave, nada de carga. Descanso obligatorio. Investigar causa de fatiga.'};
+}
+
+function scoreClass(v) {
+  if (v == null) return 'na';
+  return v >= 70 ? 'hi' : v >= 45 ? 'mid' : 'lo';
+}
+
+// ══════════════════════════════════════════
+// RENDER ENTRENO
+// ══════════════════════════════════════════
+function renderEntreno() {
+  var panel = document.getElementById('p-entreno');
+  var day = DEFAULT_PLAN[activeDay];
+  var color = day.color;
+  var dateStr = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'short'});
+
+  var daySel = DAYS.map(function(d) {
+    var dc = DEFAULT_PLAN[d].color;
+    var act = d === activeDay;
+    var bg = act ? 'rgba(255,255,255,0.05)' : 'transparent';
+    var bc = act ? dc : 'var(--border)';
+    var tc = act ? dc : 'var(--muted2)';
+    var lbl = DEFAULT_PLAN[d].label.split(' ').map(function(w){return '<div>'+w+'</div>';}).join('');
+    return '<button class="day-btn" style="background:'+bg+';border-color:'+bc+'" onclick="switchDay(\''+d+'\')">' +
+      '<div class="day-btn-lbl" style="color:'+tc+'">'+lbl+'</div></button>';
+  }).join('');
+
+  var isToday = activeDate === new Date().toISOString().slice(0,10);
+  var dateLbl = isToday ? 'Hoy' : new Date(activeDate+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+  var dateBg  = isToday ? 'rgba(255,255,255,0.04)' : 'rgba(255,159,10,0.12)';
+  var dateBc  = isToday ? 'var(--border)' : 'rgba(255,159,10,0.4)';
+  var dateClr = isToday ? 'var(--muted2)' : '#ff9f0a';
+
+  var html = '<div>';
+  html += '<div class="day-header">';
+  html += '<div class="day-header-date">'+dateStr+'</div>';
+  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+  html += '<div>';
+  html += '<div class="day-header-name" style="color:'+color+'">'+day.label+'</div>';
+  html += '<div class="day-header-sub">'+day.sub+'</div>';
+  html += '</div>';
+  html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding-top:4px">';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:right">Fecha sesión</div>';
+  html += '<label style="display:flex;align-items:center;gap:6px;background:'+dateBg+';border:1px solid '+dateBc+';border-radius:9px;padding:5px 10px;cursor:pointer">';
+  html += '<span style="font-size:11px;font-weight:700;color:'+dateClr+'">'+dateLbl+'</span>';
+  html += '<input type="date" value="'+activeDate+'" max="'+new Date().toISOString().slice(0,10)+'" ';
+  html += 'onchange="setActiveDate(this.value)" ';
+  html += 'style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" id="date-picker-hidden">';
+  html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="'+dateClr+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" onclick="document.getElementById(\'date-picker-hidden\').showPicker&&document.getElementById(\'date-picker-hidden\').showPicker()" style="cursor:pointer"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  html += '</label>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="day-selector">'+daySel+'</div>';
+
+  if (day.cardio) {
+    html += buildCardioDayHtml(activeDay);
+  } else {
+    html += buildStrengthDayHtml(activeDay, day, color);
+  }
+  html += '</div>';
+  panel.innerHTML = html;
+}
+
+function switchDay(d) {
+  activeDay = d;
+  stopRest();
+  renderEntreno();
+}
+
+function setActiveDate(val) {
+  activeDate = val || new Date().toISOString().slice(0,10);
+  renderEntreno();
+}
+
+// ── Strength ──────────────────────────────
+function buildStrengthDayHtml(dayKey, day, color) {
+  var d = loadData();
+  var total = 0, done = 0;
+  day.blocks.forEach(function(b) {
+    b.exercises.forEach(function(ex) {
+      for (var i=0;i<ex.sets;i++) {
+        total++;
+        var k = dayKey+'_'+ex.id+'_'+i+'_'+activeDate;
+        if (d[k] && d[k].done) done++;
+      }
+    });
+  });
+  var pct = total > 0 ? Math.round((done/total)*100) : 0;
+
+  var html = '';
+  html += '<div class="prog-wrap">';
+  html += '<div class="prog-top"><span class="prog-lbl">Progreso hoy</span>';
+  html += '<span class="prog-val" style="color:'+color+'">'+done+' / '+total+' series</span></div>';
+  html += '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+  html += '</div>';
+  html += '<div id="rest-bar" class="rest-bar">';
+  html += '<div class="rb-info"><div class="rb-lbl">Descanso</div>';
+  html += '<div class="rb-val" id="rb-val">—</div>';
+  html += '<div class="rb-track"><div class="rb-fill" id="rb-fill" style="width:100%;background:'+color+'"></div></div>';
+  html += '</div><button class="btn-skip" onclick="stopRest()">Saltar ›</button></div>';
+
+  day.blocks.forEach(function(b) { html += buildBlockHtml(b, dayKey, color, d); });
+
+  var noteKey = 'note_'+dayKey+'_'+activeDate;
+  var savedNote = d[noteKey] || '';
+  html += '<div class="sh"><div class="sh-title">Notas de sesión</div><div class="sh-line"></div></div>';
+  html += '<textarea class="notes-ta" rows="3" placeholder="Sensaciones, cargas, observaciones…" onchange="saveNote(\''+dayKey+'\',this.value)">'+savedNote+'</textarea>';
+  return html;
+}
+
+function saveNote(dk, val) {
+  var d = loadData();
+  d['note_'+dk+'_'+activeDate] = val;
+  saveData(d);
+}
+
+function buildBlockHtml(block, dayKey, color, d) {
+  var html = '<div class="block-wrap">';
+  html += '<div class="block-hdr">';
+  if (block.ss) {
+    html += '<span class="ss-badge">SS · Bloque '+block.id+' · '+block.rest+'s</span>';
+  } else {
+    html += '<span class="block-solo-lbl">Bloque '+block.id+' · '+block.rest+'s descanso</span>';
+  }
+  html += '</div>';
+  html += '<div class="block-exs" style="border-color:'+color+'35">';
+  block.exercises.forEach(function(ex) { html += buildExHtml(ex, block, dayKey, color, d); });
+  html += '</div></div>';
+  return html;
+}
+
+function buildExHtml(ex, block, dayKey, color, d) {
+  var allDone = true;
+  for (var i=0;i<ex.sets;i++) {
+    if (!d[dayKey+'_'+ex.id+'_'+i+'_'+todayStr()] || !d[dayKey+'_'+ex.id+'_'+i+'_'+todayStr()].done) { allDone=false; break; }
+  }
+  var nameColor = allDone ? 'var(--muted2)' : color;
+  var html = '<div class="ex-card">';
+  html += '<div class="ex-name" style="color:'+nameColor+'">'+ex.name+'</div>';
+  html += '<div class="ex-meta">Objetivo: <b>'+ex.repsLabel+'</b></div>';
+  html += '<div class="col-hdrs"><div class="col-hdr">Set</div><div class="col-hdr">Peso kg</div><div></div><div class="col-hdr">Reps</div><div class="col-hdr">✓</div></div>';
+  for (var i=0;i<ex.sets;i++) {
+    var key = dayKey+'_'+ex.id+'_'+i+'_'+todayStr();
+    var sd = d[key] || {w:'',r:'',done:false};
+    html += buildSetRowHtml(key, i, sd, color, block.rest);
+  }
+  html += '</div>';
+  return html;
+}
+
+function buildSetRowHtml(key, idx, sd, color, restSecs) {
+  var done = sd.done || false;
+  var cls = done ? 'set-row done' : 'set-row';
+  var chkBg = done ? 'rgba(255,255,255,0.05)' : color;
+  var chkColor = done ? 'var(--muted2)' : '#000';
+  var chkIcon = done ? '✓' : '·';
+  var safe = key.replace(/[^a-zA-Z0-9]/g,'_');
+  return '<div class="'+cls+'" id="sr_'+safe+'">'+
+    '<div class="set-num">'+(idx+1)+'</div>'+
+    '<input class="set-in" type="number" placeholder="—" value="'+(sd.w||'')+'" '+
+    (done?'disabled ':'')+
+    'oninput="setField(\''+key+'\',\'w\',this.value)">'+
+    '<div class="set-sep">×</div>'+
+    '<input class="set-in" type="number" placeholder="—" value="'+(sd.r||'')+'" '+
+    (done?'disabled ':'')+
+    'oninput="setField(\''+key+'\',\'r\',this.value)">'+
+    '<button class="btn-chk" style="background:'+chkBg+';color:'+chkColor+'" '+
+    'onclick="toggleSet(\''+key+'\','+restSecs+')">'+chkIcon+'</button>'+
+    '</div>';
+}
+
+function setField(key, field, val) {
+  var d = loadData();
+  if (!d[key]) d[key] = {w:'',r:'',done:false};
+  d[key][field] = val;
+  saveData(d);
+}
+
+function toggleSet(key, restSecs) {
+  var d = loadData();
+  if (!d[key]) d[key] = {w:'',r:'',done:false};
+  d[key].done = !d[key].done;
+  var wasDone = d[key].done;
+  saveData(d);
+  renderEntreno();
+  if (wasDone) startRest(restSecs);
+}
+
+// ── Rest timer ─────────────────────────────
+function startRest(secs) {
+  stopRest();
+  restEnd = Date.now() + secs * 1000;
+  restTotal = secs;
+  var el = document.getElementById('rest-bar');
+  if (el) el.classList.add('on');
+  restTimer = setInterval(tickRest, 300);
+  tickRest();
+}
+
+function stopRest() {
+  if (restTimer) { clearInterval(restTimer); restTimer = null; }
+  restEnd = null; restTotal = null;
+  var el = document.getElementById('rest-bar');
+  if (el) el.classList.remove('on');
+}
+
+function tickRest() {
+  if (!restEnd) return;
+  var rem = Math.max(0, Math.ceil((restEnd - Date.now()) / 1000));
+  var vEl = document.getElementById('rb-val');
+  var fEl = document.getElementById('rb-fill');
+  if (vEl) vEl.textContent = Math.floor(rem/60)+':'+String(rem%60).padStart(2,'0');
+  if (fEl) fEl.style.width = (restTotal > 0 ? (rem/restTotal)*100 : 0)+'%';
+  if (rem <= 0) { stopRest(); toast('¡A por la siguiente serie!','#00e5a0'); }
+}
+
+// ── Cardio ─────────────────────────────────
+function buildCardioDayHtml(dayKey) {
+  var day = DEFAULT_PLAN[dayKey];
+  var color = day.color;
+  var p = day.prescription;
+  var d = loadData();
+  var ck = 'cardio_'+dayKey.replace(/ /g,'_')+'_'+activeDate;
+  var cd = d[ck] || {};
+  var saved = cd.saved;
+  var dk = dayKey.replace(/ /g,'_');
+
+  var html = '<div class="cardio-card" style="border-color:'+color+'28">';
+  html += '<div class="cardio-icon">'+p.icon+'</div>';
+  html += '<div class="cardio-zone-badge" style="background:'+color+'18;border-color:'+color+'45;color:'+color+'">'+p.zone+'</div>';
+  html += '<div class="cardio-fc" style="color:'+color+'">'+p.fcTarget+'</div>';
+  html += '<div class="cardio-dur">'+p.duration+'</div>';
+  html += '<div class="cardio-desc">'+p.description+'</div>';
+  html += '<div class="cardio-rule">'+p.rule+'</div>';
+  html += '</div>';
+
+  if (saved) {
+    html += '<div class="cardio-saved" style="color:'+color+';border-color:'+color+'40;background:'+color+'0d">';
+    html += '✓ Sesión guardada';
+    if (cd.duration) html += ' · '+cd.duration+' min';
+    if (cd.fcMed) html += ' · FC '+cd.fcMed+' bpm';
+    if (cd.cadencia) html += ' · Cad '+cd.cadencia;
+    html += '</div>';
+    html += '<button class="btn btn-ghost btn-full btn-sm" onclick="clearCardio(\''+dayKey+'\')">Borrar y volver a registrar</button>';
+  } else {
+    html += '<div class="sh"><div class="sh-title">Registrar sesión</div><div class="sh-line"></div></div>';
+    html += '<div class="cardio-grid">';
+    html += cfld('Duración','cf-d-'+dk,'number','55',cd.duration);
+    html += cfld('FC Media','cf-m-'+dk,'number','115',cd.fcMed);
+    html += cfld('FC Máxima','cf-x-'+dk,'number','138',cd.fcMax);
+    html += cfld('Cadencia','cf-c-'+dk,'number','170',cd.cadencia);
+    html += cfld('RPE 1–10','cf-r-'+dk,'number','6',cd.rpe);
+    html += '</div>';
+    html += '<textarea id="cf-n-'+dk+'" class="cardio-ta" rows="2" placeholder="Sensaciones, terreno, tobillo, clima…">'+(cd.notes||'')+'</textarea>';
+    html += '<button class="btn btn-full" style="background:'+color+';color:#000" onclick="saveCardio(\''+dayKey+'\')">Guardar sesión cardio</button>';
+  }
+  return html;
+}
+
+function cfld(lbl, id, type, ph, val) {
+  var units = {dur:'min',med:'bpm',max:'bpm',cad:'ppm',rpe:'1–10'};
+  var idPart = id.split('-')[1];
+  var unit = idPart === 'd' ? 'min' : idPart === 'm' || idPart === 'x' ? 'bpm' : idPart === 'c' ? 'ppm' : '';
+  return '<div class="cardio-field"><div class="cf-lbl">'+lbl+'</div>'+
+    '<input id="'+id+'" class="cf-in" type="'+type+'" placeholder="'+ph+'" value="'+(val||'')+'">' +
+    '<div class="cf-unit">'+unit+'</div></div>';
+}
+
+function saveCardio(dayKey) {
+  var dk = dayKey.replace(/ /g,'_');
+  function gv(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+  var d = loadData();
+  var ck = 'cardio_'+dk+'_'+activeDate;
+  d[ck] = {
+    duration: gv('cf-d-'+dk), fcMed: gv('cf-m-'+dk),
+    fcMax: gv('cf-x-'+dk), cadencia: gv('cf-c-'+dk),
+    rpe: gv('cf-r-'+dk), notes: (document.getElementById('cf-n-'+dk)||{}).value||'',
+    saved:true, date: activeDate
+  };
+  saveData(d);
+  toast('Sesión cardio guardada ✓', DEFAULT_PLAN[dayKey].color);
+  renderEntreno();
+}
+
+function clearCardio(dayKey) {
+  var d = loadData();
+  delete d['cardio_'+dayKey.replace(/ /g,'_')+'_'+activeDate];
+  saveData(d);
+  renderEntreno();
+}
+
+// ══════════════════════════════════════════
+// RENDER RECOVERY
+// ══════════════════════════════════════════
+function renderRecovery() {
+  var panel = document.getElementById('p-recovery');
+  var wk = getWeekKey(weekOffset);
+  var wl = getWeekLabel(weekOffset);
+  var entry = loadWeekEntry(wk);
+  var hist = loadHist().filter(function(e) { return e.weekKey !== wk; });
+  var w = entry ? entry.wellness : {};
+  var scores = entry ? entry.scores : {recovery:null,recomp:null,longevity:null};
+  var dec = getDecision(scores.recovery);
+
+  var html = '';
+
+  html += '<div class="week-nav">';
+  html += '<button class="btn-wk" onclick="shiftWeek(-1)">‹</button>';
+  html += '<div class="week-nav-lbl">'+wl+'</div>';
+  html += '<button class="btn-wk" onclick="shiftWeek(1)"'+(weekOffset>=0?' disabled':'')+'>›</button>';
+  html += '</div>';
+
+  html += '<div class="scores-row">';
+  html += buildScoreCard('Recovery', scores.recovery);
+  html += buildScoreCard('Recomp', scores.recomp);
+  html += buildScoreCard('Longevity', scores.longevity);
+  html += '</div>';
+
+  html += '<div class="decision" style="border-left-color:'+dec.color+'">';
+  html += '<div class="dec-tag" style="color:'+dec.color+'">'+dec.tag+'</div>';
+  html += '<div class="dec-main">'+dec.main+'</div>';
+  html += '<div class="dec-sub">'+dec.sub+'</div>';
+  html += '</div>';
+
+  html += '<div class="sh"><div class="sh-title">Datos de la semana</div><div class="sh-line"></div></div>';
+
+  // CSV import button
+  html += '<div style="margin-bottom:12px;display:flex;gap:7px;align-items:center;flex-wrap:wrap">';
+  html += '<label class="btn btn-ghost btn-sm" style="cursor:pointer;flex:1">📂 Importar CSV Garmin';
+  html += '<input type="file" accept=".csv,.CSV" style="display:none" onchange="importGarminCSV(this)"></label>';
+  html += '<span style="font-size:10px;color:var(--muted2);line-height:1.4;flex:2">Health Stats CSV<br>de Garmin Connect</span>';
+  html += '</div>';
+  html += '<div id="csv-result"></div>';
+
+  html += '<div class="form-grid">';
+  html += bfld('HRV (ms)','r-hrv',w.hrv,'45');
+  html += bfld('Body Battery','r-bb',w.bodyBattery,'72');
+  html += bfld('FC Reposo (bpm)','r-fcr',w.fcReposo,'52');
+  html += bfld('Energía 1–10','r-en',w.energia,'7');
+  html += bfld('Peso (kg)','r-peso',w.peso,'88.5');
+  html += bfld('Proteína (g/día)','r-prot',w.proteina,'165');
+  html += bfld('VO2max','r-vo2',w.vo2max,'42');
+  html += bfld('Horas sedentario','r-sed',w.sedentario,'6');
+  html += '</div>';
+  html += '<button class="btn btn-primary btn-full" onclick="saveRecovery()">Calcular y guardar semana</button>';
+
+  panel.innerHTML = html;
+}
+
+function buildScoreCard(name, val) {
+  var cls = scoreClass(val);
+  return '<div class="score-card"><div class="sc-lbl">'+name+'</div>' +
+    '<div class="sc-val '+cls+'">'+(val != null ? val : '—')+'</div>' +
+    '<div class="sc-name">Score</div></div>';
+}
+
+function bfld(lbl, id, val, ph) {
+  return '<div class="fld"><label>'+lbl+'</label>' +
+    '<input id="'+id+'" type="number" placeholder="'+ph+'" value="'+(val!=null&&val!==''?val:'')+'" step="any"></div>';
+}
+
+// ══════════════════════════════════════════
+// GARMIN CSV IMPORT
+// ══════════════════════════════════════════
+
+// Fuzzy column finder — returns index or -1
+function findCol(headers, candidates) {
+  for (var i = 0; i < headers.length; i++) {
+    var h = headers[i].toLowerCase().replace(/['"()]/g,'').trim();
+    for (var j = 0; j < candidates.length; j++) {
+      if (h.indexOf(candidates[j]) !== -1) return i;
+    }
+  }
+  return -1;
+}
+
+function parseGarminCSV(text) {
+  // Remove BOM
+  text = text.replace(/^\uFEFF/, '').trim();
+  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+  if (lines.length < 2) return null;
+
+  // Detect delimiter: count commas vs semicolons in header
+  var h0 = lines[0];
+  var delim = (h0.match(/;/g)||[]).length > (h0.match(/,/g)||[]).length ? ';' : ',';
+
+  // Parse headers
+  var headers = h0.split(delim).map(function(h) { return h.replace(/^"|"$/g,'').trim(); });
+
+  // Map columns — lists ordered by priority
+  var colHRV    = findCol(headers, ['hrv last night avg','nightly hrv average','hrv avg','hrv last night','hrv (last','hrv']);
+  var colBB     = findCol(headers, ['avg body battery','average body battery','body battery high','body battery']);
+  var colFC     = findCol(headers, ['resting heart rate','resting hr','fc reposo','frecuencia cardiaca reposo','hr reposo']);
+  var colStress = findCol(headers, ['avg stress','average stress','stress average','stress avg','estres medio','stress']);
+  var colDate   = findCol(headers, ['date','fecha','day','date local']);
+
+  // Get week window
+  var wkStart = getWeekStart(weekOffset);
+  var wkEnd   = new Date(wkStart); wkEnd.setDate(wkEnd.getDate() + 7);
+
+  var buckets = { hrv: [], bodyBattery: [], fcReposo: [], stress: [] };
+  var totalRows = 0;
+  var matchedRows = 0;
+
+  lines.slice(1).forEach(function(line) {
+    if (!line.trim()) return;
+    totalRows++;
+    // Split respecting quoted fields
+    var cells = [];
+    var inQ = false, cur = '';
+    for (var ci = 0; ci < line.length; ci++) {
+      var ch = line[ci];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === delim && !inQ) { cells.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cells.push(cur.trim());
+
+    // Parse date
+    if (colDate >= 0) {
+      var ds = cells[colDate] ? cells[colDate].replace(/^"|"$/g,'').trim() : '';
+      if (ds) {
+        var d = new Date(ds);
+        // Try alternate date format dd/mm/yyyy if needed
+        if (isNaN(d.getTime()) && ds.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          var parts = ds.split('/');
+          d = new Date(parts[2]+'-'+parts[1]+'-'+parts[0]);
+        }
+        if (isNaN(d.getTime()) || d < wkStart || d >= wkEnd) return;
+      }
+    }
+    matchedRows++;
+
+    function getNum(idx) {
+      if (idx < 0 || idx >= cells.length) return null;
+      var v = parseFloat(cells[idx]);
+      return isNaN(v) ? null : v;
+    }
+
+    var hrv  = getNum(colHRV);
+    var bb   = getNum(colBB);
+    var fcr  = getNum(colFC);
+    var str  = getNum(colStress);
+
+    if (hrv  != null && hrv > 0)   buckets.hrv.push(hrv);
+    if (bb   != null && bb > 0)    buckets.bodyBattery.push(bb);
+    if (fcr  != null && fcr > 0)   buckets.fcReposo.push(fcr);
+    if (str  != null && str >= 0)  buckets.stress.push(str);
+  });
+
+  function avg(arr) {
+    if (!arr.length) return null;
+    return Math.round(arr.reduce(function(a,b){return a+b;},0) / arr.length * 10) / 10;
+  }
+
+  return {
+    hrv: avg(buckets.hrv),
+    bodyBattery: avg(buckets.bodyBattery),
+    fcReposo: avg(buckets.fcReposo),
+    stress: avg(buckets.stress),
+    detectedCols: {
+      hrv: colHRV >= 0, bodyBattery: colBB >= 0,
+      fcReposo: colFC >= 0, stress: colStress >= 0
+    },
+    totalRows: totalRows,
+    matchedRows: matchedRows
+  };
+}
+
+function importGarminCSV(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var result = parseGarminCSV(ev.target.result);
+      input.value = '';
+      if (!result) { toast('CSV vacío o no reconocido', '#ff2d55'); return; }
+
+      var resEl = document.getElementById('csv-result');
+      if (!result.matchedRows && !result.totalRows) {
+        if (resEl) resEl.innerHTML = '<div style="background:rgba(255,45,85,0.07);border:1px solid rgba(255,45,85,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(255,45,85,.85);margin-bottom:10px">No se encontraron filas para esta semana. Prueba exportando un rango de fechas que incluya ' + getWeekLabel(weekOffset) + '.</div>';
+        return;
+      }
+
+      // Apply found values to form fields
+      var applied = [];
+      if (result.hrv != null) { var el=document.getElementById('r-hrv'); if(el){el.value=result.hrv;} applied.push('HRV: '+result.hrv+' ms'); }
+      if (result.bodyBattery != null) { var el=document.getElementById('r-bb'); if(el){el.value=result.bodyBattery;} applied.push('Body Battery: '+result.bodyBattery); }
+      if (result.fcReposo != null) { var el=document.getElementById('r-fcr'); if(el){el.value=result.fcReposo;} applied.push('FC Reposo: '+result.fcReposo+' bpm'); }
+
+      // Show result summary
+      var rows = result.matchedRows > 0 ? result.matchedRows : result.totalRows;
+      var msg = applied.length > 0
+        ? '<div style="background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,.25);border-radius:8px;padding:10px 12px;margin-bottom:10px">' +
+          '<div style="font-size:10px;font-family:var(--mono);color:#00e5a0;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">CSV importado · '+rows+' días</div>' +
+          '<div style="font-size:12px;color:rgba(235,235,240,.75);line-height:1.6">'+applied.join(' · ')+'</div>' +
+          (result.stress != null ? '<div style="font-size:11px;color:var(--muted2);margin-top:3px">Estrés medio detectado: '+result.stress+' (informativo)</div>' : '') +
+          '</div>'
+        : '<div style="background:rgba(255,159,10,0.07);border:1px solid rgba(255,159,10,.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:rgba(255,159,10,.85)">CSV leído ('+rows+' filas) pero no se reconocieron columnas de HRV, Body Battery ni FC. Comprueba que es el export de Health Stats de Garmin Connect.</div>';
+
+      if (resEl) resEl.innerHTML = msg;
+
+    } catch(err) {
+      toast('Error al procesar el CSV', '#ff2d55');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function shiftWeek(dir) {
+  weekOffset = Math.min(0, weekOffset + dir);
+  renderRecovery();
+}
+
+function gn(id) { var v = document.getElementById(id); return v && v.value !== '' ? parseFloat(v.value) : null; }
+
+function saveRecovery() {
+  var wk = getWeekKey(weekOffset);
+  var wl = getWeekLabel(weekOffset);
+  var w = {
+    hrv: gn('r-hrv'), bodyBattery: gn('r-bb'),
+    fcReposo: gn('r-fcr'), energia: gn('r-en'),
+    peso: gn('r-peso'), proteina: gn('r-prot'),
+    vo2max: gn('r-vo2'), sedentario: gn('r-sed')
+  };
+  var hist = loadHist();
+  var recovery = calcRecovery(w);
+  var recomp = calcRecomp(w, recovery, hist);
+  var longevity = calcLongevity(w, hist);
+  saveWeekEntry({
+    weekKey: wk, weekLabel: wl,
+    savedAt: new Date().toISOString(),
+    wellness: w,
+    scores: {recovery: recovery, recomp: recomp, longevity: longevity}
+  });
+  toast('Semana guardada · exportando JSON…', '#00e5a0');
+  setTimeout(exportJSON, 600);
+  renderRecovery();
+}
+
+// ══════════════════════════════════════════
+// RENDER PROGRESO
+// ══════════════════════════════════════════
+function renderProgreso() {
+  var panel = document.getElementById('p-progreso');
+  var hist = loadHist();
+
+  var html = '<div class="data-bar">';
+  html += '<button class="btn btn-secondary btn-sm" onclick="exportJSON()">⬇ Exportar JSON</button>';
+  html += '<label class="btn btn-ghost btn-sm" style="cursor:pointer">⬆ Importar JSON' +
+    '<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>';
+  html += '</div>';
+
+  if (!hist.length) {
+    html += '<div class="no-data"><div class="no-data-icon">📊</div>' +
+      '<div class="no-data-ttl">Sin datos todavía</div>' +
+      '<div class="no-data-sub">Registra tu primera semana en Recovery</div></div>';
+    panel.innerHTML = html;
+    return;
+  }
+
+  html += '<div class="chart-card"><div class="chart-ttl">Recovery · Recomp · Longevity</div><canvas id="ch-idx" height="180"></canvas></div>';
+
+  var hasPeso = hist.some(function(e) { return e.wellness && e.wellness.peso != null; });
+  if (hasPeso) {
+    html += '<div class="chart-card"><div class="chart-ttl">Tendencia de peso</div><canvas id="ch-peso" height="140"></canvas></div>';
+  }
+
+  html += '<div class="sh"><div class="sh-title">Historial</div><div class="sh-line"></div></div>';
+  html += '<table class="hist-tbl"><thead><tr>' +
+    '<th>Semana</th><th>Rec</th><th>Rcp</th><th>Lon</th><th></th>' +
+    '</tr></thead><tbody>';
+  var sorted = hist.slice().reverse();
+  sorted.forEach(function(e) {
+    html += '<tr>';
+    html += '<td style="font-size:11px;color:var(--muted2)">'+(e.weekLabel||e.weekKey)+'</td>';
+    html += '<td class="mono-sm '+scoreClass(e.scores.recovery)+'">'+(e.scores.recovery!=null?e.scores.recovery:'—')+'</td>';
+    html += '<td class="mono-sm '+scoreClass(e.scores.recomp)+'">'+(e.scores.recomp!=null?e.scores.recomp:'—')+'</td>';
+    html += '<td class="mono-sm '+scoreClass(e.scores.longevity)+'">'+(e.scores.longevity!=null?e.scores.longevity:'—')+'</td>';
+    html += '<td><button class="btn-del" onclick="deleteWeek(\''+e.weekKey+'\')">🗑</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  panel.innerHTML = html;
+
+  if (charts['idx']) { charts['idx'].destroy(); }
+  if (charts['peso']) { charts['peso'].destroy(); }
+
+  var last = hist.slice(-12);
+  var labels = last.map(function(e) { return e.weekLabel ? e.weekLabel.split('–')[0].trim() : e.weekKey; });
+
+  var ctxIdx = document.getElementById('ch-idx');
+  if (ctxIdx) {
+    charts['idx'] = new Chart(ctxIdx, {
+      type:'line',
+      data:{
+        labels:labels,
+        datasets:[
+          {label:'Recovery',data:last.map(function(e){return e.scores.recovery;}),borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.05)',tension:0.4,borderWidth:2,pointRadius:3,spanGaps:true},
+          {label:'Recomp',data:last.map(function(e){return e.scores.recomp;}),borderColor:'#ffd60a',backgroundColor:'rgba(255,214,10,0.05)',tension:0.4,borderWidth:2,pointRadius:3,spanGaps:true},
+          {label:'Longevity',data:last.map(function(e){return e.scores.longevity;}),borderColor:'#0a84ff',backgroundColor:'rgba(10,132,255,0.05)',tension:0.4,borderWidth:2,pointRadius:3,spanGaps:true}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        scales:{
+          x:{ticks:{color:'#55556a',font:{size:9}},grid:{color:'#141419'}},
+          y:{min:0,max:100,ticks:{color:'#55556a',font:{size:9}},grid:{color:'#141419'}}
+        },
+        plugins:{legend:{labels:{color:'#7777a0',font:{size:10},boxWidth:10}}}
+      }
+    });
+  }
+
+  if (hasPeso) {
+    var ctxPeso = document.getElementById('ch-peso');
+    if (ctxPeso) {
+      charts['peso'] = new Chart(ctxPeso, {
+        type:'line',
+        data:{
+          labels:labels,
+          datasets:[{
+            label:'Peso',
+            data:last.map(function(e){return e.wellness&&e.wellness.peso?e.wellness.peso:null;}),
+            borderColor:'#ff9f0a',backgroundColor:'rgba(255,159,10,0.05)',
+            tension:0.4,borderWidth:2,pointRadius:3,spanGaps:true
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          scales:{
+            x:{ticks:{color:'#55556a',font:{size:9}},grid:{color:'#141419'}},
+            y:{ticks:{color:'#55556a',font:{size:9},callback:function(v){return v+' kg';}},grid:{color:'#141419'}}
+          },
+          plugins:{legend:{display:false}}
+        }
+      });
+    }
+  }
+}
+
+function deleteWeek(wk) {
+  if (!confirm('¿Borrar la semana '+wk+'?')) return;
+  saveHist(loadHist().filter(function(e){return e.weekKey!==wk;}));
+  renderProgreso();
+}
+
+// ══════════════════════════════════════════
+// JSON EXPORT / IMPORT
+// ══════════════════════════════════════════
+function exportJSON() {
+  var obj = {
+    version: APP_VER,
+    exportDate: new Date().toISOString(),
+    profile: loadProf(),
+    history: loadHist(),
+    trainingData: loadData()
+  };
+  var blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'WellnessOS_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Historial exportado ✓', '#00e5a0');
+}
+
+function importJSON(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = JSON.parse(ev.target.result);
+      if (data.history && Array.isArray(data.history)) {
+        var merged = loadHist();
+        data.history.forEach(function(entry) {
+          var idx = merged.findIndex(function(e){return e.weekKey===entry.weekKey;});
+          if (idx>=0) merged[idx]=entry; else merged.push(entry);
+        });
+        merged.sort(function(a,b){return a.weekKey<b.weekKey?-1:1;});
+        saveHist(merged);
+      }
+      if (data.trainingData) saveData(Object.assign(loadData(), data.trainingData));
+      if (data.profile) saveProf(Object.assign(loadProf(), data.profile));
+      input.value = '';
+      toast('Importado correctamente ✓', '#00e5a0');
+      renderProgreso();
+    } catch(err) {
+      toast('Error al leer el archivo', '#ff2d55');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════
+// RENDER COACH
+// ══════════════════════════════════════════
+function renderCoach() {
+  var panel = document.getElementById('p-coach');
+  var msgs = coachMsgs.map(function(m) {
+    return '<div class="msg '+m.role+'"><div class="msg-role">'+(m.role==='user'?'· Tú':'· Coach')+'</div>' +
+      '<div class="msg-body">'+m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')+'</div></div>';
+  }).join('');
+
+  if (!msgs) {
+    msgs = '<div style="text-align:center;padding:40px 16px;color:var(--muted2)">' +
+      '<div style="font-size:26px;margin-bottom:10px">🤖</div>' +
+      '<div style="font-size:13px;line-height:1.6">Coach personal.<br>Pregunta sobre entrenamiento,<br>nutrición o recuperación.</div></div>';
+  }
+
+  panel.innerHTML =
+    '<div class="coach-wrap">' +
+    '<div class="coach-msgs" id="cmsg">'+msgs+'</div>' +
+    '<div class="coach-typing" id="ctyp"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>' +
+    '<div class="coach-row">' +
+    '<textarea class="coach-in" id="cin" rows="2" placeholder="Pregunta algo…" onkeydown="coachKey(event)"></textarea>' +
+    '<button class="btn-send" onclick="sendCoach()">↑</button>' +
+    '</div></div>';
+
+  var msgs_el = document.getElementById('cmsg');
+  if (msgs_el) msgs_el.scrollTop = msgs_el.scrollHeight;
+}
+
+function coachKey(e) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCoach();} }
+
+function buildSysPrompt() {
+  var p = loadProf();
+  var hist = loadHist();
+  var last = hist.length ? hist[hist.length-1] : null;
+  var ctx = 'Eres el coach personal de '+p.name+', '+p.age+' años. Programa híbrido fuerza + trail running. ';
+  ctx += 'FCmax '+p.maxHR+' bpm. Umbral lactato '+p.ltHR+' bpm. Z2: 106–123 bpm. Z4: 141–158 bpm. ';
+  ctx += 'Peso objetivo '+p.goalWeight+' kg. Proteína objetivo '+p.proteinGoal+' g/día. ';
+  ctx += 'Plan semanal: Torso A (Lun), Cardio Z2 trail (Mar), Pierna (Mié), Torso B (Vie), Intervalos cuesta (Sáb). ';
+  if (last) {
+    ctx += 'Última semana ('+( last.weekLabel||last.weekKey)+'): ';
+    ctx += 'Recovery '+( last.scores.recovery||'—')+', Recomp '+(last.scores.recomp||'—')+', Longevity '+(last.scores.longevity||'—')+'. ';
+    if (last.wellness) {
+      var w = last.wellness;
+      if (w.peso) ctx += 'Peso actual: '+w.peso+' kg. ';
+      if (w.hrv) ctx += 'HRV: '+w.hrv+' ms. ';
+      if (w.vo2max) ctx += 'VO2max: '+w.vo2max+'. ';
+    }
+  }
+  ctx += 'Responde en español. Sé preciso y basado en evidencia. Sin inventar datos. Máximo 3 párrafos cortos.';
+  return ctx;
+}
+
+async function sendCoach() {
+  var input = document.getElementById('cin');
+  var text = input ? input.value.trim() : '';
+  if (!text) return;
+  var p = loadProf();
+  var url = p.workerUrl || 'https://api.anthropic.com/v1/messages';
+  coachMsgs.push({role:'user',content:text});
+  input.value = '';
+  renderCoach();
+  var typ = document.getElementById('ctyp');
+  if (typ) typ.classList.add('on');
+  try {
+    var msgs = coachMsgs.slice(-10).map(function(m){return {role:m.role,content:m.content};});
+    var resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSysPrompt(),messages:msgs})
+    });
+    if (!resp.ok) throw new Error('HTTP '+resp.status);
+    var data = await resp.json();
+    var reply = data.content && data.content[0] ? data.content[0].text : 'Sin respuesta.';
+    coachMsgs.push({role:'assistant',content:reply});
+  } catch(err) {
+    coachMsgs.push({role:'assistant',content:'Error de conexión. Verifica la Worker URL en ⚙ Configuración.'});
+  }
+  renderCoach();
+}
+
+// ══════════════════════════════════════════
+// GOOGLE DRIVE SYNC
+// ══════════════════════════════════════════
+var DRIVE_CLIENT_ID = '601691093802-k475gd25ejmt6qippldvam0fc3ed0jhv.apps.googleusercontent.com';
+var DRIVE_SCOPE     = 'https://www.googleapis.com/auth/drive.file';
+var DRIVE_FILE_NAME = 'wellnessos-data.json';
+
+var driveToken    = null;
+var driveFileId   = null;
+var driveEmail    = null;
+var driveSyncTmt  = null;
+
+function setDriveStatus(state, msg) {
+  var dot = document.getElementById('sync-dot');
+  var lbl = document.getElementById('drive-status');
+  if (dot) dot.className = 'sync-dot' + (state ? ' '+state : '');
+  if (lbl) { lbl.textContent = msg; lbl.className = state || ''; }
+}
+
+function driveLogin() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    setDriveStatus('err','Cargando Google…'); setTimeout(driveLogin, 1500); return;
+  }
+  var client = google.accounts.oauth2.initTokenClient({
+    client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE,
+    callback: function(resp) {
+      if (resp.error) { setDriveStatus('err','Error de autenticación'); return; }
+      driveToken = resp.access_token;
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers:{Authorization:'Bearer '+driveToken}})
+        .then(function(r){return r.json();}).then(function(u){driveEmail=u.email||'';}).catch(function(){});
+      showDriveConnected();
+      setDriveStatus('syncing','Conectando…');
+      driveLoadOrCreate();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function driveLogout() {
+  if (driveToken) google.accounts.oauth2.revoke(driveToken);
+  driveToken = null; driveFileId = null; driveEmail = null;
+  setDriveStatus('','Sin conexión a Drive');
+  var login = document.getElementById('btn-drive-login');
+  var logout = document.getElementById('btn-drive-logout');
+  if (login) login.style.display = 'flex';
+  if (logout) logout.remove();
+}
+
+function showDriveConnected() {
+  var login = document.getElementById('btn-drive-login');
+  if (login) login.style.display = 'none';
+  if (!document.getElementById('btn-drive-logout')) {
+    var btn = document.createElement('button');
+    btn.id = 'btn-drive-logout'; btn.className = 'drive-btn';
+    btn.style.cssText = 'background:rgba(255,255,255,.04);border-color:var(--border);color:var(--muted2)';
+    btn.textContent = 'Desconectar'; btn.onclick = driveLogout;
+    document.getElementById('drive-bar').appendChild(btn);
+  }
+}
+
+function buildDrivePayload() {
+  return JSON.stringify({
+    version: APP_VER,
+    savedAt: new Date().toISOString(),
+    data:    loadData(),
+    hist:    loadHist(),
+    prof:    loadProf()
+  });
+}
+
+async function driveLoadOrCreate() {
+  try {
+    var q = encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
+    var res = await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,modifiedTime)', {
+      headers:{Authorization:'Bearer '+driveToken}
+    });
+    var json = await res.json();
+    if (json.files && json.files.length > 0) {
+      driveFileId = json.files[0].id;
+      await drivePullAndMerge();
+    } else {
+      await driveCreateFile();
+      setDriveStatus('ok', driveEmail ? '✓ '+driveEmail : '✓ Drive conectado');
+    }
+  } catch(e) { setDriveStatus('err','Error al conectar'); }
+}
+
+async function driveCreateFile() {
+  var form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify({name:DRIVE_FILE_NAME,mimeType:'application/json'})],{type:'application/json'}));
+  form.append('file', new Blob([buildDrivePayload()],{type:'application/json'}));
+  var res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{
+    method:'POST', headers:{Authorization:'Bearer '+driveToken}, body:form
+  });
+  var d = await res.json(); driveFileId = d.id;
+}
+
+async function drivePullAndMerge() {
+  setDriveStatus('syncing','Sincronizando…');
+  try {
+    var res = await fetch('https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media',{
+      headers:{Authorization:'Bearer '+driveToken}
+    });
+    var remote = await res.json();
+
+    // Merge data: union of keys, prefer newer by key presence
+    var localData = loadData();
+    var merged = Object.assign({}, remote.data || {});
+    Object.keys(localData).forEach(function(k){ if (!(k in merged)) merged[k] = localData[k]; });
+    localStorage.setItem(DATA_KEY, JSON.stringify(merged));
+
+    // Merge hist: deduplicate by weekKey
+    var localHist = loadHist();
+    var remoteHist = remote.hist || [];
+    var histMap = {};
+    remoteHist.forEach(function(e){ histMap[e.weekKey] = e; });
+    localHist.forEach(function(e){ if (!(e.weekKey in histMap)) histMap[e.weekKey] = e; });
+    var mergedHist = Object.values(histMap).sort(function(a,b){return a.weekKey<b.weekKey?-1:1;});
+    localStorage.setItem(HIST_KEY, JSON.stringify(mergedHist));
+
+    // Prof: prefer local if set, else remote
+    if (remote.prof && !localStorage.getItem(PROF_KEY)) {
+      localStorage.setItem(PROF_KEY, JSON.stringify(remote.prof));
+    }
+
+    await drivePush();
+    setDriveStatus('ok', driveEmail ? '✓ '+driveEmail : '✓ Sincronizado');
+
+    // Re-render active panel
+    var active = document.querySelector('.panel.active');
+    if (active) {
+      var id = active.id.replace('p-','');
+      if (id === 'entreno') renderEntreno();
+      else if (id === 'recovery') renderRecovery();
+      else if (id === 'progreso') renderProgreso();
+    }
+  } catch(e) { setDriveStatus('err','Error al sincronizar'); }
+}
+
+async function drivePush() {
+  if (!driveToken || !driveFileId) return;
+  try {
+    await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',{
+      method:'PATCH',
+      headers:{Authorization:'Bearer '+driveToken,'Content-Type':'application/json'},
+      body: buildDrivePayload()
+    });
+  } catch(e) { console.warn('Drive push error:', e); }
+}
+
+function scheduleDriveSync() {
+  if (!driveToken || !driveFileId) return;
+  clearTimeout(driveSyncTmt);
+  setDriveStatus('syncing','Guardando…');
+  driveSyncTmt = setTimeout(async function() {
+    await drivePush();
+    setDriveStatus('ok', driveEmail ? '✓ '+driveEmail : '✓ Guardado en Drive');
+  }, 1500);
+}
+
+function trySilentAuth() {
+  try {
+    if (typeof google === 'undefined' || !google.accounts) { setTimeout(trySilentAuth, 500); return; }
+    var client = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, prompt: '',
+      callback: function(resp) {
+        if (resp && !resp.error) {
+          driveToken = resp.access_token;
+          fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+driveToken}})
+            .then(function(r){return r.json();}).then(function(u){driveEmail=u.email||'';}).catch(function(){});
+          showDriveConnected();
+          setDriveStatus('syncing','Reconectando…');
+          driveLoadOrCreate();
+        }
+      }
+    });
+    client.requestAccessToken({prompt:''});
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  renderEntreno();
+  setTimeout(trySilentAuth, 1000);
+});
+</script>
+</body>
+</html>

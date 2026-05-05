@@ -58,8 +58,7 @@
   #btn-clear:hover { background: rgba(255,71,71,0.14); }
 
   /* ── DAY SELECTOR ─────────────────────────────────────── */
-  #day-selector { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; margin-bottom: 20px; }
-  #day-selector .day-btn-label { font-size: 9px; }
+  #day-selector { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 20px; }
   .day-btn { border-radius: 12px; padding: 10px 6px; transition: all 0.2s; border-width: 1.5px; border-style: solid; }
   .day-btn-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.3; text-align: center; }
 
@@ -288,6 +287,16 @@
   /* ── VOLUME CHART ──────────────────────────────────────── */
   canvas.vol-chart { width: 100%; height: 130px; display: block; }
 
+  /* ── EXPORT / IMPORT ──────────────────────────────────── */
+  #export-import-bar {
+    display: flex; gap: 8px; padding: 8px 20px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: center; flex-wrap: wrap;
+  }
+  .eib-label { font-size: 10px; color: rgba(255,255,255,0.22); font-weight: 600; letter-spacing: 0.5px; flex-shrink: 0; }
+  .eib-btn { display: flex; align-items: center; gap: 5px; border-radius: 10px; padding: 6px 11px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+
   /* ── COACH IA ──────────────────────────────────────────── */
   #coach-view { display: none; flex-direction: column; height: calc(100vh - 180px); padding: 0; }
   #coach-header { padding: 16px 20px 12px; flex-shrink: 0; }
@@ -321,36 +330,6 @@
   .coach-chip { font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
   .coach-chip:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
 
-  /* ── CARDIO DAY ───────────────────────────────────────── */
-  .cardio-prescription {
-    border-radius: 18px; padding: 20px; margin: 0 20px 20px;
-    border-width: 1.5px; border-style: solid;
-  }
-  .cardio-prescription-icon { font-size: 36px; margin-bottom: 10px; }
-  .cardio-zone-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    border-radius: 100px; padding: 5px 14px; border-width: 1px; border-style: solid;
-    font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .cardio-fc { font-size: 28px; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
-  .cardio-duration { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 14px; }
-  .cardio-desc { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.75); margin-bottom: 10px; }
-  .cardio-rule {
-    font-size: 11px; font-weight: 700; padding: 10px 14px; border-radius: 10px;
-    border-width: 1px; border-style: solid; line-height: 1.5;
-  }
-  .cardio-log { padding: 0 20px 20px; }
-  .cardio-log-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 14px; }
-  .cardio-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .cardio-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px 14px; }
-  .cardio-field-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 6px; }
-  .cardio-field-input { width: 100%; background: transparent; border: none; color: #fff; font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; outline: none; padding: 0; }
-  .cardio-field-input::placeholder { color: rgba(255,255,255,0.18); }
-  .cardio-field-unit { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 3px; }
-  .cardio-save-btn { width: 100%; border: none; border-radius: 16px; padding: 16px; font-size: 15px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
-  .cardio-saved-badge { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border-radius: 16px; font-size: 14px; font-weight: 800; border-width: 1px; border-style: solid; }
-
   /* ── MISC ─────────────────────────────────────────────── */
   .section-sep { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0 20px; }
 </style>
@@ -367,6 +346,20 @@
       Conectar Drive
     </button>
     <div id="drive-error-log"></div>
+  </div>
+
+  <div id="export-import-bar">
+    <span class="eib-label">💾 DATOS</span>
+    <button class="eib-btn" onclick="exportData()"
+      style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.22);color:#4ade80">
+      ↓ Exportar
+    </button>
+    <button class="eib-btn" onclick="document.getElementById('import-file').click()"
+      style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.22);color:#60a5fa">
+      ↑ Importar
+    </button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <span id="last-export-lbl" style="font-size:10px;color:rgba(255,255,255,0.18);margin-left:4px"></span>
   </div>
 
   <div id="main-nav">
@@ -526,86 +519,73 @@ function playCheckSound() {
 // CONSTANTS & DATA
 // ═══════════════════════════════════════════════════════════
 const STORAGE_KEY = "vshape_html_v1";
-const PLAN_KEY    = "vshape_plan_v5";
+const PLAN_KEY    = "vshape_plan_v4";
 const PROFILE_KEY = "vshape_profile_v1";
 
 const DEFAULT_PLAN = {
   "Torso A": {
-    label: "TORSO A", sub: "Horizontal Push/Pull · Lunes", color: "#00E5FF",
+    label: "TORSO A", sub: "Hombro y Densidad · Lunes", color: "#00E5FF",
     blocks: [
       { id: "A", ss: true, rest: 90, exercises: [
         { id: "A1", name: "Press Inclinado Mancuernas", sets: 3, repsLabel: "10-12" },
         { id: "A2", name: "Dominadas Pronas", sets: 3, repsLabel: "RIR 2" },
       ]},
       { id: "B", ss: true, rest: 90, exercises: [
-        { id: "B1", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
-        { id: "B2", name: "Elevaciones Laterales", sets: 3, repsLabel: "15-20" },
+        { id: "B1", name: "Elevaciones Laterales", sets: 3, repsLabel: "12-15" },
+        { id: "B2", name: "Remo Barra Supino", sets: 3, repsLabel: "10" },
       ]},
-      { id: "C", ss: true, rest: 90, exercises: [
+      { id: "C", ss: true, rest: 60, exercises: [
         { id: "C1", name: "Face Pulls", sets: 3, repsLabel: "15" },
         { id: "C2", name: "Paseo del Granjero", sets: 3, repsLabel: "45s" },
       ]},
     ],
   },
-  "Cardio Z2": {
-    label: "CARDIO Z2", sub: "Trail Zona 2 · Martes", color: "#00BCD4",
-    cardio: true,
-    prescription: {
-      icon: "🏔️",
-      zone: "Zona 2",
-      fcTarget: "115–129 bpm",
-      duration: "50–60 min",
-      description: "Marcha rápida en cuesta. FC por debajo de 129 bpm todo el tiempo. Ritmo conversacional.",
-      rule: "Si superas 129 bpm → reduce el ritmo aunque vayas despacio.",
-    },
-  },
-  "Pierna": {
-    label: "PIERNA", sub: "Cuád + Cadena Posterior · Miércoles", color: "#FFB300",
+  "Pierna A": {
+    label: "PIERNA A", sub: "Cuádriceps · Martes", color: "#FFB300",
     blocks: [
       { id: "A", ss: false, rest: 120, exercises: [
-        { id: "A1", name: "Sentadilla Trasera", sets: 3, repsLabel: "6-8" },
+        { id: "A1", name: "Sentadilla Trasera", sets: 3, repsLabel: "8" },
       ]},
       { id: "B", ss: true, rest: 90, exercises: [
-        { id: "B1", name: "Peso Muerto Rumano", sets: 3, repsLabel: "10-12" },
-        { id: "B2", name: "Gemelos de Pie", sets: 3, repsLabel: "15" },
+        { id: "B1", name: "Sentadilla Búlgara", sets: 2, repsLabel: "10 c/pierna" },
+        { id: "B2", name: "Plancha Abdominal", sets: 2, repsLabel: "60s" },
       ]},
       { id: "C", ss: true, rest: 90, exercises: [
-        { id: "C1", name: "Sentadilla Búlgara", sets: 2, repsLabel: "10 c/pierna" },
-        { id: "C2", name: "Plancha Abdominal", sets: 2, repsLabel: "60s" },
-      ]},
-      { id: "D", ss: false, rest: 60, exercises: [
-        { id: "D1", name: "Rueda Abdominal", sets: 3, repsLabel: "8-10" },
+        { id: "C1", name: "Peso Muerto Rumano", sets: 3, repsLabel: "10-12" },
+        { id: "C2", name: "Gemelos de Pie", sets: 3, repsLabel: "15" },
       ]},
     ],
   },
   "Torso B": {
-    label: "TORSO B", sub: "Vertical Push/Pull V-Shape · Viernes", color: "#76FF03",
+    label: "TORSO B", sub: "V-Shape Pro · Jueves", color: "#76FF03",
     blocks: [
-      { id: "A", ss: true, rest: 120, exercises: [
+      { id: "A", ss: true, rest: 90, exercises: [
         { id: "A1", name: "Press Militar Barra", sets: 3, repsLabel: "6-8" },
         { id: "A2", name: "Chin-ups", sets: 3, repsLabel: "RIR 2" },
       ]},
       { id: "B", ss: true, rest: 90, exercises: [
         { id: "B1", name: "Remo Mancuerna 1 Mano", sets: 3, repsLabel: "10-12" },
-        { id: "B2", name: "Flexiones Manos Elevadas", sets: 3, repsLabel: "RIR 1" },
+        { id: "B2", name: "Flexiones", sets: 3, repsLabel: "RIR 1" },
       ]},
-      { id: "C", ss: true, rest: 90, exercises: [
+      { id: "C", ss: true, rest: 60, exercises: [
         { id: "C1", name: "Pullover Polea", sets: 2, repsLabel: "15" },
         { id: "C2", name: "Elevaciones Laterales", sets: 2, repsLabel: "15" },
       ]},
     ],
   },
-  "Cardio INT": {
-    label: "CARDIO INT", sub: "Intervalos en Cuesta · Sábado", color: "#FF6F00",
-    cardio: true,
-    prescription: {
-      icon: "⚡",
-      zone: "Zona 4–5",
-      fcTarget: "145–155 bpm",
-      duration: "30–35 min",
-      description: "Calentamiento 10 min Z2 → 6–8 × 45–60s cuesta arriba al 85–90% FCmax → bajar andando entre repeticiones.",
-      rule: "SIEMPRE bajar andando. La fase excéntrica de descenso es el mayor riesgo de tobillo.",
-    },
+  "Pierna B": {
+    label: "PIERNA B", sub: "Cadena Posterior · Viernes", color: "#FF4081",
+    blocks: [
+      { id: "A", ss: false, rest: 120, exercises: [
+        { id: "A1", name: "Peso Muerto Convencional", sets: 3, repsLabel: "5-7" },
+      ]},
+      { id: "B", ss: false, rest: 90, exercises: [
+        { id: "B1", name: "Goblet Squat", sets: 3, repsLabel: "12" },
+      ]},
+      { id: "C", ss: false, rest: 60, exercises: [
+        { id: "C1", name: "Rueda Abdominal", sets: 3, repsLabel: "10" },
+      ]},
+    ],
   },
 };
 
@@ -1052,7 +1032,6 @@ function checkAndCelebrate() {
   const key = `${activeDay}_${todayStr()}`;
   if (_celebratedKeys.has(key)) return;
   const day = PLAN[activeDay];
-  if (day.cardio) return;
   const d = loadData();
   let total = 0, done = 0;
   day.blocks.forEach(b => b.exercises.forEach(e => {
@@ -1266,7 +1245,6 @@ function getAllTimeMaxWeight(dayKey, blockId, exId) {
 function getWeeklyVolumeHistory(dayKey) {
   const all = loadData();
   const day = PLAN[dayKey];
-  if (day.cardio) return [];
   const weeks = {};
   day.blocks.forEach(block => {
     block.exercises.forEach(ex => {
@@ -1487,7 +1465,7 @@ function renderProgreso() {
   }
 
   // ── Volumen semanal por día ────────────────────────────────
-  const volSeries = DAY_ORDER.filter(dk => !PLAN[dk].cardio).map(dayKey => ({
+  const volSeries = DAY_ORDER.map(dayKey => ({
     dayKey, color: PLAN[dayKey].color, label: PLAN[dayKey].label,
     data: getWeeklyVolumeHistory(dayKey)
   })).filter(s => s.data.length > 0);
@@ -1515,7 +1493,6 @@ function renderProgreso() {
 
   DAY_ORDER.forEach(dayKey => {
     const day = PLAN[dayKey];
-    if (day.cardio) return;
     daySeries[dayKey] = [];
     day.blocks.forEach((block, bi) => {
       block.exercises.forEach((ex, ei) => {
@@ -1737,8 +1714,7 @@ function skipTimer(timerKey, containerId) {
 // PROGRESS BAR
 // ═══════════════════════════════════════════════════════════
 function updateProgress() {
-  const day = PLAN[activeDay]; if (day.cardio) return;
-  const d = loadData();
+  const day = PLAN[activeDay]; const d = loadData();
   let total = 0, done = 0;
   day.blocks.forEach(b => b.exercises.forEach(e => {
     const entry = d[dataKey(activeDay, b.id, e.id)];
@@ -2007,125 +1983,6 @@ function renderBlock(block, dayKey, color) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// CARDIO DATA
-// ═══════════════════════════════════════════════════════════
-function cardioDataKey(dayKey, date) { return `cardio_${dayKey.replace(/ /g,'_')}_${date||todayStr()}`; }
-function loadCardioData(dayKey) {
-  const d = loadData();
-  return d[cardioDataKey(dayKey)] || { duration:'', fcMed:'', fcMax:'', rpe:'', notes:'' };
-}
-function saveCardioField(dayKey, field, val) {
-  const d = loadData();
-  const k = cardioDataKey(dayKey);
-  if (!d[k]) d[k] = { duration:'', fcMed:'', fcMax:'', rpe:'', notes:'' };
-  d[k][field] = val;
-  saveData(d);
-}
-function saveCardioSession(dayKey) {
-  const dur = document.getElementById(`cardio-dur-${dayKey}`)?.value || '';
-  const fcm = document.getElementById(`cardio-fcm-${dayKey}`)?.value || '';
-  const fcx = document.getElementById(`cardio-fcx-${dayKey}`)?.value || '';
-  const rpe = document.getElementById(`cardio-rpe-${dayKey}`)?.value || '';
-  const nts = document.getElementById(`cardio-nts-${dayKey}`)?.value || '';
-  const d = loadData();
-  const k = cardioDataKey(dayKey);
-  d[k] = { duration: dur, fcMed: fcm, fcMax: fcx, rpe, notes: nts, saved: true, date: todayStr() };
-  // Also save session marker for week dots & session timer
-  const sk = 'session_' + dayKey.replace(/ /g,'_') + '_' + todayStr();
-  const durSecs = dur ? parseInt(dur) * 60 : 0;
-  d[sk] = { date: todayStr(), day: dayKey, durationSecs: durSecs };
-  saveData(d);
-  showToast('Sesión cardio guardada ✓', PLAN[dayKey].color);
-  renderDay();
-  renderWeekDots();
-  renderNextSessionBar();
-}
-
-// ═══════════════════════════════════════════════════════════
-// RENDER CARDIO DAY
-// ═══════════════════════════════════════════════════════════
-function renderCardioDay(dayKey) {
-  const day = PLAN[dayKey], color = day.color, p = day.prescription;
-  const cd = loadCardioData(dayKey);
-  const saved = cd.saved;
-
-  const blocksEl = document.getElementById('blocks');
-  const progressWrap = document.getElementById('progress-wrap');
-  const sessionNotes = document.getElementById('session-notes-wrap');
-
-  if (progressWrap) {
-    progressWrap.innerHTML = `
-      <div id="progress-top" style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span id="progress-lbl" style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;letter-spacing:1px;text-transform:uppercase">Sesión hoy</span>
-        <span id="progress-val" style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${color}">${saved ? '✓ Completada' : 'Sin registrar'}</span>
-      </div>
-      <div id="progress-track" style="height:4px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden">
-        <div id="progress-bar" style="height:100%;border-radius:100px;background:${color};box-shadow:0 0 8px ${hex2rgb(color,0.5)};width:${saved?'100%':'0%'};transition:width 0.4s ease"></div>
-      </div>`;
-  }
-
-  if (sessionNotes) sessionNotes.style.display = 'none';
-
-  blocksEl.innerHTML = `
-    <div class="cardio-prescription" style="background:${hex2rgb(color,0.06)};border-color:${hex2rgb(color,0.22)}">
-      <div class="cardio-prescription-icon">${p.icon}</div>
-      <div class="cardio-zone-badge" style="background:${hex2rgb(color,0.12)};border-color:${hex2rgb(color,0.3)};color:${color}">${p.zone}</div>
-      <div class="cardio-fc" style="color:${color}">${p.fcTarget}</div>
-      <div class="cardio-duration">${p.duration}</div>
-      <div class="cardio-desc">${p.description}</div>
-      <div class="cardio-rule" style="background:rgba(255,165,0,0.07);border-color:rgba(255,165,0,0.25);color:rgba(255,165,0,0.85)">⚠️ ${p.rule}</div>
-    </div>
-
-    <div class="cardio-log">
-      <div class="cardio-log-title">Registrar sesión</div>
-      ${saved ? `
-        <div class="cardio-saved-badge" style="background:${hex2rgb(color,0.08)};border-color:${hex2rgb(color,0.25)};color:${color}">
-          ✓ Sesión guardada · ${cd.duration ? cd.duration+'min' : ''} ${cd.fcMed ? '· FC '+cd.fcMed+'bpm' : ''}
-        </div>
-        <button class="cardio-save-btn" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);margin-top:10px" onclick="clearCardioSession('${dayKey}')">Borrar y volver a registrar</button>
-      ` : `
-        <div class="cardio-fields">
-          <div class="cardio-field">
-            <div class="cardio-field-label">Duración real</div>
-            <input id="cardio-dur-${dayKey}" class="cardio-field-input" type="number" placeholder="55" value="${cd.duration}" oninput="saveCardioField('${dayKey}','duration',this.value)">
-            <div class="cardio-field-unit">minutos</div>
-          </div>
-          <div class="cardio-field">
-            <div class="cardio-field-label">FC media</div>
-            <input id="cardio-fcm-${dayKey}" class="cardio-field-input" type="number" placeholder="122" value="${cd.fcMed}" oninput="saveCardioField('${dayKey}','fcMed',this.value)">
-            <div class="cardio-field-unit">bpm</div>
-          </div>
-          <div class="cardio-field">
-            <div class="cardio-field-label">FC máxima</div>
-            <input id="cardio-fcx-${dayKey}" class="cardio-field-input" type="number" placeholder="138" value="${cd.fcMax}" oninput="saveCardioField('${dayKey}','fcMax',this.value)">
-            <div class="cardio-field-unit">bpm</div>
-          </div>
-          <div class="cardio-field">
-            <div class="cardio-field-label">RPE</div>
-            <input id="cardio-rpe-${dayKey}" class="cardio-field-input" type="number" min="1" max="10" placeholder="6" value="${cd.rpe}" oninput="saveCardioField('${dayKey}','rpe',this.value)">
-            <div class="cardio-field-unit">1–10</div>
-          </div>
-        </div>
-        <textarea id="cardio-nts-${dayKey}" class="notes-textarea" style="display:block;margin-bottom:12px" placeholder="Sensaciones, terreno, tobillo, clima…" oninput="saveCardioField('${dayKey}','notes',this.value)">${cd.notes}</textarea>
-        <button class="cardio-save-btn" style="background:${color};color:#000;box-shadow:0 4px 16px ${hex2rgb(color,0.35)}" onclick="saveCardioSession('${dayKey}')">
-          Guardar sesión cardio
-        </button>
-      `}
-    </div>`;
-}
-
-function clearCardioSession(dayKey) {
-  const d = loadData();
-  delete d[cardioDataKey(dayKey)];
-  const sk = 'session_' + dayKey.replace(/ /g,'_') + '_' + todayStr();
-  delete d[sk];
-  saveData(d);
-  renderDay();
-  renderWeekDots();
-  renderNextSessionBar();
-}
-
-// ═══════════════════════════════════════════════════════════
 // RENDER DAY
 // ═══════════════════════════════════════════════════════════
 function renderDay() {
@@ -2144,43 +2001,6 @@ function renderDay() {
     </button>`;
   }).join("");
 
-  // ── Cardio day branch ────────────────────────────────────
-  if (day.cardio) {
-    const sessionNotes = document.getElementById('session-notes-wrap');
-    if (sessionNotes) sessionNotes.style.display = 'none';
-    const startBtn = document.getElementById('btn-start-routine');
-    if (startBtn) startBtn.style.display = 'none';
-    renderCardioDay(activeDay);
-    updateNavStyle();
-    renderWeekDots();
-    renderNextSessionBar();
-    return;
-  }
-
-  // ── Strength day branch ──────────────────────────────────
-  const sessionNotes = document.getElementById('session-notes-wrap');
-  if (sessionNotes) sessionNotes.style.display = '';
-  const startBtn = document.getElementById('btn-start-routine');
-  if (startBtn && !routineInterval) {
-    startBtn.style.display = 'flex';
-    startBtn.style.background = hex2rgb(color,0.15);
-    startBtn.style.color = color;
-    startBtn.style.border = '1.5px solid ' + hex2rgb(color,0.4);
-  }
-
-  // Restore progress wrap to original markup if coming from cardio
-  const progressWrap = document.getElementById('progress-wrap');
-  if (progressWrap && !progressWrap.querySelector('#progress-lbl')) {
-    progressWrap.innerHTML = `
-      <div id="progress-top" style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span id="progress-lbl" style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;letter-spacing:1px;text-transform:uppercase">Progreso hoy</span>
-        <span id="progress-val" style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace"></span>
-      </div>
-      <div id="progress-track" style="height:4px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden">
-        <div id="progress-bar" style="height:100%;border-radius:100px;transition:width 0.4s ease"></div>
-      </div>`;
-  }
-
   document.getElementById("blocks").innerHTML = day.blocks.map(b => renderBlock(b, activeDay, color)).join("");
   updateProgress();
   updateNavStyle();
@@ -2190,6 +2010,13 @@ function renderDay() {
   // Load session notes for today
   const ta = document.getElementById('session-notes-ta');
   if (ta) ta.value = loadSessionNote(activeDay);
+
+  const startBtn = document.getElementById('btn-start-routine');
+  if (startBtn && !routineInterval) {
+    startBtn.style.background = hex2rgb(color,0.15);
+    startBtn.style.color = color;
+    startBtn.style.border = '1.5px solid ' + hex2rgb(color,0.4);
+  }
 }
 
 function updateNavStyle() {
@@ -2258,13 +2085,6 @@ function renderPlanEditor() {
         </div>
         <div class="plan-day-body" id="plan-day-body-${dayKey}" style="display:none">`;
 
-    if (day.cardio) {
-      html += `
-          <div style="padding:10px 4px 6px;font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6">
-            ${day.prescription.icon} <strong style="color:${dc}">${day.prescription.zone}</strong> · ${day.prescription.fcTarget} · ${day.prescription.duration}<br>
-            <span style="font-size:11px">${day.prescription.description}</span>
-          </div>`;
-    } else {
     day.blocks.forEach((block, bi) => {
       html += `
           <div class="plan-block-editor">
@@ -2313,7 +2133,6 @@ function renderPlanEditor() {
             <button class="plan-add-ex-btn" onclick="planAddExercise('${dayKey}',${bi})">+ Añadir ejercicio</button>
           </div>`;
     });
-    } // end else (strength day)
 
     html += `
         </div>
@@ -2619,7 +2438,6 @@ function buildCoachContext() {
   // Plan summary
   const planStr = DAY_ORDER.map(dk => {
     const day = PLAN[dk];
-    if (day.cardio) return `${day.label}[${day.sub}]: Cardio ${day.prescription.zone} ${day.prescription.fcTarget} ${day.prescription.duration}`;
     const exs = day.blocks.flatMap(b => b.exercises.map(e => `${e.id}:${e.name}(${e.repsLabel})`));
     return `${day.label}[${day.sub}]: ${exs.join(', ')}`;
   }).join('\n');
@@ -2648,7 +2466,6 @@ function buildCoachContext() {
     });
 
     // Exercise data
-    if (PLAN[dk].cardio) return;
     PLAN[dk].blocks.forEach(block => {
       block.exercises.forEach(ex => {
         const suffix = `_${dk}_${block.id}_${ex.id}`;
@@ -2851,12 +2668,76 @@ function initCoachView() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════
+const LAST_EXPORT_KEY = 'vshape_last_export';
+
+function exportData() {
+  const payload = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    profile: loadProfile(),
+    plan: PLAN,
+    data: loadData(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = todayStr();
+  a.href = url; a.download = `vshape-backup-${date}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  localStorage.setItem(LAST_EXPORT_KEY, new Date().toISOString());
+  updateLastExportLabel();
+  showToast('✓ Backup descargado', '#4ade80');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.data) throw new Error('Formato no reconocido');
+      openConfirmModal(
+        '¿Restaurar backup?',
+        `Backup del <strong>${payload.exportDate ? new Date(payload.exportDate).toLocaleDateString('es-ES') : 'fecha desconocida'}</strong>. Se sobreescribirán los datos actuales.`,
+        () => {
+          if (payload.profile) saveProfile(payload.profile);
+          if (payload.plan) { savePlan(payload.plan); PLAN = loadPlan(); DAY_ORDER = Object.keys(PLAN); }
+          saveData(payload.data);
+          renderDay(); renderBottomBar();
+          showToast('✓ Datos restaurados', '#4ade80');
+        }
+      );
+    } catch(err) {
+      showToast('Error al leer el archivo: ' + err.message, '#f87171');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function updateLastExportLabel() {
+  const lbl = document.getElementById('last-export-lbl');
+  if (!lbl) return;
+  const last = localStorage.getItem(LAST_EXPORT_KEY);
+  if (!last) { lbl.textContent = 'Sin backup local'; return; }
+  const d = new Date(last);
+  const days = Math.floor((Date.now() - d) / 86400000);
+  const txt = days === 0 ? 'hoy' : days === 1 ? 'ayer' : `hace ${days} días`;
+  lbl.textContent = `Último backup: ${txt}`;
+  lbl.style.color = days > 7 ? '#f87171' : days > 3 ? '#fbbf24' : 'rgba(255,255,255,0.25)';
+}
+
+// ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
 renderDay();
 showView("entreno");
 renderBottomBar();
 setupSwipe();
+updateLastExportLabel();
 window.addEventListener('load', () => setTimeout(trySilentAuth, 1000));
 </script>
 </body>
